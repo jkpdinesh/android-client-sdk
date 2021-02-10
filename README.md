@@ -90,21 +90,7 @@ This takes care of permission handling related APIs (refer to documentation for 
 - Get and use meeting service and invoke join APIs to join a meeting
 - Observe for Join API result by subscribing to the Rx Single returned by the join API
 
-#### Subscriptions (ObservableValue and Rx Single's):
 
-**Single's:**
-
-http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html
-
-**ObservableValues:**
-
-Most of our subscriptions are stateful members called ObservableValues. 
-
-These are our BJN custom reactive stream elements carrying a value that can be accessed (READ only) at any point of time and also allows a subscription.
-
-Through ObservableValue you can also access rxObservable(http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html) and subscribe.
-
-Sample app depicts usage of both the RxSingle and ObeservableValue
 
 #### Managing Self Video:
 
@@ -127,7 +113,7 @@ No need to call any additional API.
 Integrated app should use these APIs in combination to drive the selfvideo mute.
 
 
-##### Video device enumeration, selection:
+#### Video device enumeration, selection:
 
 *videoDevices* will provide a list of video/camera devices available on the hardware.
 
@@ -136,7 +122,7 @@ Integrated app should use these APIs in combination to drive the selfvideo mute.
 Use *selectVideoDevice* and choose the video device of your choice from the available *videoDevices* list.
 
 
-##### Audio device enumeration, selection:
+#### Audio device enumeration, selection:
 
 *audioDevices* will provide a list of audio devices available on the hardware.
 
@@ -153,7 +139,7 @@ On dynamic change in audio devices, SDK's default order of auto selection is as 
 
 Use *selectAudioDevice* and choose the audio device of your choice from the available *audioDevices* list.
 
-##### Video Layouts:
+#### Video Layouts:
 
 Represents how remote participantâ€™s videos are composed
 - **Speaker**: Only the most recent speaker is shown, taking up the whole video stream.
@@ -163,6 +149,23 @@ Represents how remote participantâ€™s videos are composed
 *videoLayout* provides for the current video layout *setVideoLayout* can be used to force a Video Layout of your choice.
 
 Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accountâ€™s meeting settings. 
+
+#### Subscriptions (ObservableValue and Rx Single's):
+
+**Single's:**
+
+http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html
+
+**ObservableValues:**
+
+Most of our subscriptions are stateful members called ObservableValues. 
+
+These are our BJN custom reactive stream elements carrying a value that can be accessed (READ only) at any point of time and also allows a subscription.
+
+Through ObservableValue you can also access rxObservable(http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html) and subscribe.
+
+Sample app depicts usage of both the RxSingle and ObeservableValue
+
 
 ### SDK Sample Application:
 Sample app provided in this repo is a java sample app.
