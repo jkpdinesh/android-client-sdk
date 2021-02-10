@@ -66,7 +66,7 @@ implementation("com.bluejeans:sdk-android:1.0.0-alpha.1'") {
 URL and keys will be shared separately.
 
 ### Initialize BlueJeans SDK:
-Create the object of BlueJeans SDK in application onCreate with help of application context and use it to access to all the APIs
+Create the object of BlueJeans SDK in application onCreate with help of application context and use it to access all the APIs
 
 Minimum permission needed to join a meeting is permission for RECORD_AUDIO. Make sure app requests this permission before calling Join API.
 
