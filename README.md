@@ -113,7 +113,7 @@ No need to call any additional API.
 Integrated app should use these APIs in combination to drive the selfvideo mute.
 
 
-#### Video device enumeration, selection:
+#### Video device enumeration, Selection:
 
 *videoDevices* will provide a list of video/camera devices available on the hardware.
 
@@ -122,7 +122,7 @@ Integrated app should use these APIs in combination to drive the selfvideo mute.
 Use *selectVideoDevice* and choose the video device of your choice from the available *videoDevices* list.
 
 
-#### Audio device enumeration, selection:
+#### Audio device enumeration, Selection:
 
 *audioDevices* will provide a list of audio devices available on the hardware.
 
@@ -152,11 +152,11 @@ Note that by default the current layout will be the People layout or it will be 
 
 #### Subscriptions (ObservableValue and Rx Single's):
 
-**Single's:**
+##### Single's:
 
 http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html
 
-**ObservableValues:**
+##### ObservableValues:
 
 Most of our subscriptions are stateful members called ObservableValues. 
 
