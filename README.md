@@ -2,7 +2,6 @@
 # BlueJeans Android Software Development Kit
 
 ## Getting Started
-Version: 1.0.0-alpha.1
 
 ### Features:
 - Audio and Video Permission handling
@@ -12,8 +11,6 @@ Version: 1.0.0-alpha.1
 - Content receive 
 - Audio and Video self mute
 - Orientation handling
-
-##### New features in 1.0.0-alpha.1:
 - Video device enumeration, Selection
 - Audio device enumeration, Selection
 - Video Layout switch
@@ -167,9 +164,12 @@ Represents how remote participantâ€™s videos are composed
 
 Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accountâ€™s meeting settings. 
 
-### SDK Sample app:
-We have two sample apps, one in java and another written in kotlin.
+### SDK Sample Application:
+Sample app provided in this repo is a java sample app.
+It show cases the integration of BlueJeans SDK for permission flow and join flow. They have got a basic UI functionality and orientation support.
 
-Sample apps show case the integration of BlueJeans SDK for permission flow and join flow. They have got a basic UI functionality and orientation support.
+### Contributing:
+The BlueJeans Android SDK is closed source and proprietary. As a result, we cannot accept pull requests. However, we enthusiastically welcome feedback on how to make our SDK better. If you think you have found a bug, or have an improvement or feature request, please file a GitHub issue and we will get back to you. Thanks in advance for your help!
 
-**IMP Note: The resources shared in the release package are confidential. Please do not share it with anyone.**
+### License:
+Copyright © 2020 BlueJeans Network. TBD...
