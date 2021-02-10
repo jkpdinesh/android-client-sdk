@@ -1,0 +1,32 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:4.1.0"
+    }
+}
+
+def publishURL = "" // shared separately
+def AWSAccessKey = "" // shared separately
+def AWSSecretKey = "" // shared separately
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven {
+            url publishURL
+            credentials(AwsCredentials) {
+                accessKey AWSAccessKey
+                secretKey AWSSecretKey
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
