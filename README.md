@@ -4,8 +4,6 @@
 The BlueJeans Android Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
 Note that the product is currently in **alpha** phase of its release cycle and is under active development.
 
-### Getting Started
-
 ### Features:
 - Audio and Video Permission handling
 - Join, End Meeting
