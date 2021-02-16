@@ -142,14 +142,14 @@ Use *selectAudioDevice* and choose the audio device of your choice from the avai
 
 #### Video Layouts:
 
-Represents how remote participantâ€™s videos are composed
+Represents how remote participants videos are composed
 - **Speaker**: Only the most recent speaker is shown, taking up the whole video stream.
 - **People**: The most recent speaker is shown as a larger video. A filmstrip of the next (up to) 5 most recent speakers is shown at the top.
 - **Gallery**: Bunch of most recent speakers are shown, arranged in a grid layout of equal sizes.
 
 *videoLayout* provides for the current video layout *setVideoLayout* can be used to force a Video Layout of your choice.
 
-Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accountâ€™s meeting settings. 
+Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accounts meeting settings. 
 
 #### Subscriptions (ObservableValue and Rx Single's):
 
