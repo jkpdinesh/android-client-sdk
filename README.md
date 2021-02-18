@@ -155,7 +155,8 @@ Note that by default the current layout will be the People layout or it will be 
 
 #### Subscriptions (ObservableValue and Rx Single's):
 
-##### RxSingle: This is a standard [Rx Single](http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html)
+##### RxSingle: 
+This is a standard [Rx Single](http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html)
 
 ##### ObservableValue:
 
