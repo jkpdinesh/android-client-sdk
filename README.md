@@ -155,15 +155,12 @@ Note that by default the current layout will be the People layout or it will be 
 
 #### Subscriptions (ObservableValue and Rx Single's):
 
-##### [RxSingle](http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html)
+##### RxSingle: This is a standard [Rx Single](http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html)
 
 ##### ObservableValue:
 
 Most of our subscriptions are stateful members called ObservableValues. 
-
-These are our BJN custom reactive stream elements carrying a value that can be accessed (READ only) at any point of time and also allows a subscription.
-
-Through ObservableValue you can also access [RxObservable](http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html) and subscribe.
+These are our BJN custom reactive stream elements carrying a value that can be accessed (READ only) at any point of time and also allows a subscription. Through ObservableValue you can also access [RxObservable](http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html) and subscribe.
 
 Sample app depicts usage of both the RxSingle and ObeservableValue
 
