@@ -63,6 +63,9 @@ implementation("com.bluejeans:sdk-android:1.0.0-alpha.1'") {
 ```
 URL and keys will be shared separately.
 
+### Documentation:
+[Dokka API docs](https://bluejeans.github.io/android-sdk)
+
 ### Initialize BlueJeans SDK:
 Create the object of BlueJeans SDK in application onCreate with help of application context and use it to access all the APIs
 
