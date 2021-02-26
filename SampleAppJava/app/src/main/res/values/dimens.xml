@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="self_view_ratio">H,1.33</string>
-    <dimen name="_20dp">20dp</dimen>
-    <dimen name="_12dp">12dp</dimen>
-    <dimen name="_8dp">8dp</dimen>
-</resources>
