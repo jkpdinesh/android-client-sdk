@@ -46,9 +46,7 @@ We distribute our SDK from the Maven Repository.
 
 To add the SDK to your app, add the following dependency in your build.gradle files:
 ```xml
-repositories {
-        maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" }
-    }
+repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 ```
 ```xml
 implementation "com.bluejeans:sdk-android:1.0.0-alpha.1'"
