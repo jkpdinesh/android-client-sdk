@@ -9,21 +9,11 @@ buildscript {
     }
 }
 
-def publishURL = "" // shared separately
-def AWSAccessKey = "" // shared separately
-def AWSSecretKey = "" // shared separately
-
 allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            url publishURL
-            credentials(AwsCredentials) {
-                accessKey AWSAccessKey
-                secretKey AWSSecretKey
-            }
-        }
+        maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" }
     }
 }
 
