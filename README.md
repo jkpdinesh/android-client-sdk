@@ -49,7 +49,7 @@ To add the SDK to your app, add the following dependency in your build.gradle fi
 repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 ```
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-alpha.1'"
+implementation "com.bluejeans:sdk-android:1.0.0-alpha.1"
 ```
 
 ### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
