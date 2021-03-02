@@ -4,8 +4,6 @@
 The BlueJeans Android Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
 Note that the product is currently in **alpha** phase of its release cycle and is under active development.
 
-### Version: 1.0.0-alpha.1
-
 ### Features:
 - Audio and Video Permission handling
 - Join, End Meeting
@@ -18,6 +16,8 @@ Note that the product is currently in **alpha** phase of its release cycle and i
 - Audio device enumeration, Selection
 - Video Layout switch
 
+### Current Version: 1.0.0-alpha.1
+
 ### Pre-requisites:
 - **Android API level:** Min level 26
 - **Android Device:** 
@@ -29,6 +29,9 @@ Note that the product is currently in **alpha** phase of its release cycle and i
    - Android X
    - Compile SDK Version: 28 and above
    - Source and Target compatibility to java version 1_8 in gradle
+   - RxJava, RxKotlin
+
+### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
 
 ### Integration Steps:
 #### Override Minimum SDK Version:
@@ -47,17 +50,19 @@ tools:overrideLibrary="com.bluejeans.bluejeanssdk"/>
 We distribute our SDK from the Maven Repository.
 
 To add the SDK to your app, add the following dependency in your build.gradle files:
+
+In top level project build.gradle
 ```xml
 repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 ```
+
+In app's build.gradle
 ```xml
 implementation "com.bluejeans:sdk-android:1.0.0-alpha.1"
 ```
 
 #### Upgrade Instructions:
 Whenever a newer version of SDK is available, you can consume it by increasing the version in the implementation code block to the new SDK version.
-
-### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
 
 ### Initialize BlueJeans SDK:
 Create the object of BlueJeans SDK in application onCreate with help of application context and use it to access all the APIs
@@ -119,7 +124,8 @@ Integrated app should use these APIs in combination to drive the selfvideo mute.
 Use *selectVideoDevice* and choose the video device of your choice from the available *videoDevices* list.
 
 
-#### Audio device enumeration, Selection:
+#### Audio device enumeration, Selection: 
+(Available only after joining a meeting)
 
 *audioDevices* will provide a list of audio devices available on the hardware.
 
