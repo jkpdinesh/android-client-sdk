@@ -4,6 +4,8 @@
 The BlueJeans Android Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
 Note that the product is currently in **alpha** phase of its release cycle and is under active development.
 
+### Version: 1.0.0-alpha.1
+
 ### Features:
 - Audio and Video Permission handling
 - Join, End Meeting
@@ -51,6 +53,9 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 ```xml
 implementation "com.bluejeans:sdk-android:1.0.0-alpha.1"
 ```
+
+#### Upgrade Instructions:
+Whenever a newer version of SDK is available, you can consume it by increasing the version in the implementation code block to the new SDK version.
 
 ### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
 
