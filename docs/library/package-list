@@ -2,11 +2,13 @@ $dokka.format:html-v1
 $dokka.linkExtension:html
 
 com.bluejeans.bluejeanssdk
+com.bluejeans.bluejeanssdk.analytics
 com.bluejeans.bluejeanssdk.meeting
 com.bluejeans.bluejeanssdk.meeting.remotecontent
 com.bluejeans.bluejeanssdk.meeting.remotevideo
 com.bluejeans.bluejeanssdk.permission
 com.bluejeans.bluejeanssdk.selfvideo
+com.bluejeans.bluejeanssdk.utils
 com.bluejeans.bluejeanssdk.utils.base
 com.bluejeans.bluejeanssdk.utils.logging
 
