@@ -16,7 +16,12 @@ Note that the product is currently in **alpha** phase of its release cycle and i
 - Audio device enumeration, Selection
 - Video Layout switch
 
-### Current Version: 1.0.0-alpha.1
+### New Features:
+- Participant list
+- Participant properties: Audio mute state, Video mute state, is Self, Name and Unique Identifier
+- Self Participant
+
+### Current Version: 1.0.0-alpha.2
 
 ### Pre-requisites:
 - **Android API level:** Min level 26
@@ -58,7 +63,7 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 
 In app's build.gradle
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-alpha.1"
+implementation "com.bluejeans:sdk-android:1.0.0-alpha.2"
 ```
 
 #### Upgrade Instructions:
@@ -152,6 +157,14 @@ Represents how remote participants videos are composed
 *videoLayout* provides for the current video layout *setVideoLayout* can be used to force a Video Layout of your choice.
 
 Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accounts meeting settings. 
+
+#### Participant List:
+
+*participant* represents a meeting participant. Carries properties video mute state, audio mute state, is self, name and an unique identifier of the participant.
+
+*participants* provides for list of meeting participants. The list will be published on any change in the number of meeting participants or the change in properties of any of the current participants. Any change will reflect in the content of the list and the list reference remains same all throughout the meeting instance.
+
+*selfParticipant* represents self. Provides for any changes in properties of the self.
 
 #### Subscriptions (ObservableValue and Rx Single's):
 
