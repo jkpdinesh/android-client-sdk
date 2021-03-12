@@ -14,3 +14,10 @@ Orientation handling.
 Video device enumeration, Selection. 
 Audio device enumeration, Selection. 
 Video Layout switch.
+
+Version 1.0.0-alpha.2 *(03-2021)*
+---------------------------------
+New Features:
+Meeting participants list.
+Participant Audio, Video mute states, Unique identifier and Name.
+Self Participant details.
