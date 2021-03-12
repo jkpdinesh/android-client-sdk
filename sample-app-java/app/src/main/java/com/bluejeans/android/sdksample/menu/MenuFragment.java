@@ -77,8 +77,8 @@ public class MenuFragment extends BottomSheetDialogFragment {
 
     private void initViews(View view) {
         mMbVideoLayout = view.findViewById(R.id.mbVideoLayout);
-        mMbAudioDevice = view.findViewById(R.id.mb_audio_device);
-        mMbVideoDevice = view.findViewById(R.id.mb_video_device);
+        mMbAudioDevice = view.findViewById(R.id.mbAudioDevice);
+        mMbVideoDevice = view.findViewById(R.id.mbVideoDevice);
         mMbVideoLayout.setOnClickListener(view1 -> {
             mIMenuCallback.showVideoLayoutView(mMbVideoLayout.getText().toString());
             dismiss();

@@ -40,7 +40,7 @@
         app:layout_constraintTop_toBottomOf="@id/mbVideoLayout" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/mb_audio_device"
+        android:id="@+id/mbAudioDevice"
         style="@style/MaterialDropDownButton"
         android:hint="@string/audio_device"
         app:layout_constraintEnd_toEndOf="parent"
@@ -48,7 +48,7 @@
         app:layout_constraintTop_toBottomOf="@id/tvAudioDevice" />
 
     <TextView
-        android:id="@+id/tv_video_device"
+        android:id="@+id/tvVideodevice"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/_8dp"
@@ -56,17 +56,17 @@
         android:textColor="@color/black"
         android:textSize="12sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="@id/mb_audio_device"
-        app:layout_constraintTop_toBottomOf="@id/mb_audio_device" />
+        app:layout_constraintStart_toStartOf="@id/mbAudioDevice"
+        app:layout_constraintTop_toBottomOf="@id/mbAudioDevice" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/mb_video_device"
+        android:id="@+id/mbVideoDevice"
         style="@style/MaterialDropDownButton"
         android:layout_marginBottom="@dimen/_8dp"
         android:hint="@string/video_device"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/tv_video_device"
-        app:layout_constraintTop_toBottomOf="@id/tv_video_device" />
+        app:layout_constraintStart_toStartOf="@id/tvVideodevice"
+        app:layout_constraintTop_toBottomOf="@id/tvVideodevice" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

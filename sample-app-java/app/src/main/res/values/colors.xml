@@ -4,4 +4,9 @@
     <color name="white">#ffffff</color>
     <color name="light_gray">#DAECEE</color>
     <color name="transparent">#00000000</color>
+
+    <color name="roster_startColor">#cee3f7</color>
+    <color name="roster_endColor">#e4f1f9</color>
+
+    <color name="title_bar_color">#CCF8FBFC</color>
 </resources>

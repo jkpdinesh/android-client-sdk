@@ -11,4 +11,5 @@
     <string name="video_layout">Video Layout</string>
     <string name="audio_device">Audio Device</string>
     <string name="video_device">Video Device</string>
+    <string name="people">People</string>
 </resources>

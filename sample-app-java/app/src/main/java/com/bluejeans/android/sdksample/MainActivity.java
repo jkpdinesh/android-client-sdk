@@ -30,6 +30,7 @@ import com.bluejeans.android.sdksample.menu.MenuFragment.IMenuCallback;
 import com.bluejeans.android.sdksample.menu.adapters.AudioDeviceAdapter;
 import com.bluejeans.android.sdksample.menu.adapters.VideoDeviceAdapter;
 import com.bluejeans.android.sdksample.menu.adapters.VideoLayoutAdapter;
+import com.bluejeans.android.sdksample.roster.RosterFragment;
 import com.bluejeans.android.sdksample.viewpager.ScreenSlidePagerAdapter;
 import com.bluejeans.bluejeanssdk.meeting.AudioDevice;
 import com.bluejeans.bluejeanssdk.meeting.MeetingService;
@@ -66,12 +67,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText mEtEventId, mEtPassCode, mEtName;
     private TextView mTvProgressMsg;
     private Group mInMeetingControls;
+    private ImageView mIvRoster;
     private MenuFragment mBottomSheetFragment;
 
     //For alter dialog
     private VideoDeviceAdapter mVideoDeviceAdapter = null;
     private AudioDeviceAdapter mAudioDeviceAdapter = null;
     private VideoLayoutAdapter mVideoLayoutAdapter = null;
+
+    private RosterFragment mRosterFragment = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         checkCameraPermissionAndStartSelfVideo();
         activateSDKSubscriptions();
     }
+
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -129,6 +134,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 toggleVideoMuteUnMuteView(mIsVideoMuted);
                 break;
+            case R.id.imgRoster:
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.rosterContainer, mRosterFragment)
+                        .addToBackStack(null)
+                        .commit();
+                break;
             default:
                 break;
         }
@@ -145,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         subscribeForCurrentAudioDevice();
         subscribeForVideoDevices();
         subscribeForCurrentVideoDevice();
+        subscribeForRoster();
     }
 
     private void checkCameraPermissionAndStartSelfVideo() {
@@ -210,6 +223,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribe(
                         result -> {
                             if (result == MeetingService.JoinResult.Success.INSTANCE) {
+                                // Explicitly apply the current AV mute states as per user
+                                // expectation after join success.
+                                // SDK does not provide a scope to apply mute states out of meeting
                                 mMeetingService.setAudioMuted(mIsAudioMuted);
                                 mMeetingService.setVideoMuted(mIsVideoMuted);
                                 mMeetingService.enableSelfVideoPreview(false);
@@ -373,6 +389,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }));
     }
 
+    private void subscribeForRoster() {
+        mDisposable.add(mMeetingService.getParticipants().subscribeOnUI(
+                participantList -> {
+                    if (mRosterFragment != null) {
+                        mRosterFragment.updateMeetingList(participantList);
+                    }
+                    return Unit.INSTANCE;
+                },
+                err -> {
+                    Log.e(TAG, "Error in Participants subscription" + err.getMessage());
+                    return Unit.INSTANCE;
+                }));
+    }
+
     private void subscribeForVideoDevices() {
         mDisposable.add(mMeetingService.getVideoDevices().subscribeOnUI(videoDevices -> {
                     if (videoDevices != null) {
@@ -393,6 +423,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTabLayout = findViewById(R.id.tabLayout);
         ImageView mIvClose = findViewById(R.id.imgClose);
         ImageView mIvMenuOption = findViewById(R.id.imgMenuOption);
+        mIvRoster = findViewById(R.id.imgRoster);
         //Self View
         mSelfView = findViewById(R.id.selfView);
         mIvMic = findViewById(R.id.ivMic);
@@ -416,9 +447,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnJoin.setOnClickListener(this);
         mIvClose.setOnClickListener(this);
         mIvMenuOption.setOnClickListener(this);
+        mIvRoster.setOnClickListener(this);
         mIvMic.setOnClickListener(this);
         mIvVideo.setOnClickListener(this);
         mBottomSheetFragment = new MenuFragment(mIOptionMenuCallback);
+        mRosterFragment = new RosterFragment();
         mVideoLayoutAdapter = getVideoLayoutAdapter();
         mVideoDeviceAdapter = getVideoDeviceAdapter(new ArrayList<>());
         mAudioDeviceAdapter = getAudioDeviceAdapter(new ArrayList<>());
@@ -437,6 +470,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mViewPager.setVisibility(View.VISIBLE);
         mTabLayout.setVisibility(View.VISIBLE);
         mInMeetingControls.setVisibility(View.VISIBLE);
+        mIvRoster.setVisibility(View.VISIBLE);
     }
 
     private void showOutOfMeetingView() {
@@ -446,6 +480,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTvProgressMsg.setVisibility(View.GONE);
         mInMeetingControls.setVisibility(View.GONE);
         mJoinLayout.setVisibility(View.VISIBLE);
+        mIvRoster.setVisibility(View.GONE);
     }
 
     private void showProgress(String msg) {
@@ -641,7 +676,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
