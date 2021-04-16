@@ -21,3 +21,9 @@ New Features:
 Meeting participants list.
 Participant properties: Audio mute state, Video mute state, isSelf, Unique identifier and Name.
 Self Participant details.
+
+Version 1.0.0-alpha.3 *(04-2021)*
+---------------------------------
+New Features:
+Content Share.
+Log Upload.
