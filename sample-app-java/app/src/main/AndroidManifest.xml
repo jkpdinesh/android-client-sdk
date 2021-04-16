@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bluejeans.android.sdksample">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
     <application
         android:name=".SampleApplication"
         android:allowBackup="true"
@@ -18,6 +20,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <service
+            android:name=".OnGoingMeetingService"
+            android:stopWithTask="true"
+            android:foregroundServiceType="mediaProjection"/> <!--foregroundServiceType needed only if your target SDK version is >= 29-->
+
     </application>
 
 </manifest>

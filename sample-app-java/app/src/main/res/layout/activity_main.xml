@@ -53,7 +53,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintEnd_toStartOf="@+id/imgMenuOption" />
+        app:layout_constraintEnd_toStartOf="@+id/imgScreenShare" />
+
+    <ImageView
+        android:id="@+id/imgScreenShare"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="@dimen/_20dp"
+        android:layout_marginEnd="@dimen/_20dp"
+        android:src="@drawable/screen_share_state"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/imgRoster"
+        app:layout_constraintEnd_toStartOf="@+id/imgMenuOption"
+        app:layout_constraintHorizontal_chainStyle="packed" />
 
     <ImageView
         android:id="@+id/imgMenuOption"
@@ -63,7 +76,7 @@
         android:src="@drawable/ic_more_menu"
         android:layout_marginEnd="@dimen/_20dp"
         app:layout_constraintEnd_toStartOf="@+id/imgClose"
-        app:layout_constraintStart_toEndOf="@+id/imgRoster"
+        app:layout_constraintStart_toEndOf="@+id/imgScreenShare"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_chainStyle="packed" />
 
@@ -71,7 +84,7 @@
         android:id="@+id/imgClose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/leave_meeting"
+        android:src="@drawable/ic_leave_meeting"
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/imgMenuOption"

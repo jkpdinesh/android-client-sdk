@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/roster_bg">
+    android:background="@drawable/bg_roster">
 
     <RelativeLayout
         android:id="@+id/titleView"
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginStart="@dimen/_8dp"
-            android:src="@drawable/cross_close_dark_blue" />
+            android:src="@drawable/ic_close_dark_blue" />
 
     </RelativeLayout>
 

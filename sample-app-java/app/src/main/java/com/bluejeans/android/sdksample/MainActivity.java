@@ -4,7 +4,9 @@
 package com.bluejeans.android.sdksample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,6 +26,7 @@ import androidx.constraintlayout.widget.Group;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bjnclientcore.inmeeting.contentshare.ContentShareType;
 import com.bluejeans.android.sdksample.menu.ItemViewClickListener;
 import com.bluejeans.android.sdksample.menu.MenuFragment;
 import com.bluejeans.android.sdksample.menu.MenuFragment.IMenuCallback;
@@ -33,6 +36,8 @@ import com.bluejeans.android.sdksample.menu.adapters.VideoLayoutAdapter;
 import com.bluejeans.android.sdksample.roster.RosterFragment;
 import com.bluejeans.android.sdksample.viewpager.ScreenSlidePagerAdapter;
 import com.bluejeans.bluejeanssdk.meeting.AudioDevice;
+import com.bluejeans.bluejeanssdk.meeting.ContentShareAvailability;
+import com.bluejeans.bluejeanssdk.meeting.ContentShareState;
 import com.bluejeans.bluejeanssdk.meeting.MeetingService;
 import com.bluejeans.bluejeanssdk.permission.PermissionService;
 import com.bluejeans.bluejeanssdk.selfvideo.VideoDevice;
@@ -42,13 +47,17 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
 
 import static com.bluejeans.android.sdksample.utils.AudioDeviceHelper.getAudioDeviceName;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     public static final String TAG = "MainActivity";
+
+    public static final int SCREEN_SHARE_REQUEST_CODE = 1;
 
     private final PermissionService mPermissionService = SampleApplication.getBlueJeansSDK().getPermissionService();
     private final MeetingService mMeetingService = SampleApplication.getBlueJeansSDK().getMeetingService();
@@ -68,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvProgressMsg;
     private Group mInMeetingControls;
     private ImageView mIvRoster;
+    private ImageView mIvScreenShare;
     private MenuFragment mBottomSheetFragment;
 
     //For alter dialog
@@ -90,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
         if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
             configurePortraitView();
         } else {
@@ -141,9 +150,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .addToBackStack(null)
                         .commit();
                 break;
+            case R.id.imgScreenShare:
+                if (mMeetingService.getContentShareState().getValue() instanceof ContentShareState.Stopped) {
+                    MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                    startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREEN_SHARE_REQUEST_CODE);
+                } else {
+                    mMeetingService.stopContentShare();
+                }
+                break;
             default:
                 break;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch (requestCode) {
+            case SCREEN_SHARE_REQUEST_CODE:
+                if (data != null) {
+                    mMeetingService.startContentShare(new ContentShareType.Screen(data));
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void activateSDKSubscriptions() {
@@ -158,6 +187,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         subscribeForVideoDevices();
         subscribeForCurrentVideoDevice();
         subscribeForRoster();
+        subscribeForContentShareState();
+        subscribeForContentShareAvailability();
+        subscribeForContentShareEvents();
     }
 
     private void checkCameraPermissionAndStartSelfVideo() {
@@ -229,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 mMeetingService.setAudioMuted(mIsAudioMuted);
                                 mMeetingService.setVideoMuted(mIsVideoMuted);
                                 mMeetingService.enableSelfVideoPreview(false);
+                                OnGoingMeetingService.startService(this);
                             } else {
                                 showOutOfMeetingView();
                             }
@@ -241,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void endMeeting() {
         mMeetingService.endMeeting();
+        OnGoingMeetingService.stopService(this);
     }
 
     // Return Unit.INSTANCE; is needed for a kotlin java interop
@@ -403,6 +437,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }));
     }
 
+    private void subscribeForContentShareAvailability() {
+        mDisposable.add(mMeetingService.getContentShareAvailability().subscribeOnUI(
+                contentShareAvailability -> {
+                    if (contentShareAvailability instanceof ContentShareAvailability.Available) {
+                        mIvScreenShare.setVisibility(View.VISIBLE);
+                    } else {
+                        mIvScreenShare.setVisibility(View.GONE);
+                    }
+                    return Unit.INSTANCE;
+                },
+                err -> {
+                    Log.e(TAG, "Error in content share availability" + err.getMessage());
+                    return Unit.INSTANCE;
+                }));
+    }
+
+    private void subscribeForContentShareState() {
+        mDisposable.add(mMeetingService.getContentShareState().subscribeOnUI(
+                contentShareState -> {
+                    if (contentShareState instanceof ContentShareState.Stopped) {
+                        mIvScreenShare.setSelected(false);
+                        MeetingNotificationUtility.updateNotificationMessage(this, getString(R.string.meeting_notification_message));
+                    } else {
+                        mIvScreenShare.setSelected(true);
+                        MeetingNotificationUtility.updateNotificationMessage(this, getString(R.string.screen_share_notification_message));
+                    }
+                    return Unit.INSTANCE;
+                },
+                err -> {
+                    Log.e(TAG, "Error in content share state subscription" + err.getMessage());
+                    return Unit.INSTANCE;
+                }));
+    }
+
+    private void subscribeForContentShareEvents() {
+        mDisposable.add(mMeetingService.getContentShareEvent()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        contentShareEvent -> {
+                            Log.i(TAG, "Content share event is " + contentShareEvent);
+                        },
+                        err -> {
+                            Log.e(TAG, "Error in content share events subscription" + err.getMessage());
+                        }));
+    }
+
     private void subscribeForVideoDevices() {
         mDisposable.add(mMeetingService.getVideoDevices().subscribeOnUI(videoDevices -> {
                     if (videoDevices != null) {
@@ -424,6 +505,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageView mIvClose = findViewById(R.id.imgClose);
         ImageView mIvMenuOption = findViewById(R.id.imgMenuOption);
         mIvRoster = findViewById(R.id.imgRoster);
+        mIvScreenShare = findViewById(R.id.imgScreenShare);
         //Self View
         mSelfView = findViewById(R.id.selfView);
         mIvMic = findViewById(R.id.ivMic);
@@ -448,6 +530,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mIvClose.setOnClickListener(this);
         mIvMenuOption.setOnClickListener(this);
         mIvRoster.setOnClickListener(this);
+        mIvScreenShare.setOnClickListener(this);
         mIvMic.setOnClickListener(this);
         mIvVideo.setOnClickListener(this);
         mBottomSheetFragment = new MenuFragment(mIOptionMenuCallback);
@@ -481,6 +564,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mInMeetingControls.setVisibility(View.GONE);
         mJoinLayout.setVisibility(View.VISIBLE);
         mIvRoster.setVisibility(View.GONE);
+        mIvScreenShare.setVisibility(View.GONE);
     }
 
     private void showProgress(String msg) {
@@ -494,12 +578,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void toggleAudioMuteUnMuteView(boolean isMuted) {
-        int resID = isMuted ? R.drawable.ic_mic_off_black_24dp : R.drawable.ic_mic_black_24dp;
+        int resID = isMuted ? R.drawable.mic_off_black : R.drawable.mic_on_black;
         mIvMic.setImageResource(resID);
     }
 
     private void toggleVideoMuteUnMuteView(boolean isMuted) {
-        int resID = isMuted ? R.drawable.ic_videocam_off_black_24dp : R.drawable.ic_videocam_black_24dp;
+        int resID = isMuted ? R.drawable.videocam_off_black : R.drawable.videocam_on_black;
         mIvVideo.setImageResource(resID);
     }
 
