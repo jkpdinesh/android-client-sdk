@@ -15,13 +15,15 @@ Note that the product is currently in **alpha** phase of its release cycle and i
 - Video device enumeration, Selection
 - Audio device enumeration, Selection
 - Video Layout switch
-
-### New Features:
 - Participant list
 - Participant properties: Audio mute state, Video mute state, is Self, Name and Unique Identifier
 - Self Participant
 
-### Current Version: 1.0.0-alpha.2
+### New Features:
+- Screen Share
+- Log Upload
+
+### Current Version: 1.0.0-alpha.3
 
 ### Pre-requisites:
 - **Android API level:** Min level 26
@@ -63,7 +65,7 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 
 In app's build.gradle
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-alpha.2"
+implementation "com.bluejeans:sdk-android:1.0.0-alpha.3"
 ```
 
 #### Upgrade Instructions:
@@ -92,6 +94,16 @@ blueJeansSDK.getPermissionService
 This takes care of permission handling related APIs (refer to documentation for API set and details)
 
 #### Join a BlueJeans meeting:
+It is recommended to start a foreground service before getting into the meeting. If you are not familiar with [foreground services](https://developer.android.com/guide/components/foreground-services) and [notfications](https://developer.android.com/reference/android/app/Notification), we suggest you to learn about these before proceeding with this section.
+
+Starting a foreground service ensures we have all the system resources available to our app even when in background, thereby not compromising on audio quality, content capture quality during features like content share and also prevents app from being killed due to lack of resources in background.
+
+Refer OnGoingMeetingService and MeetingNotificationUtility for sample implementation.
+
+**Note:** 
+- foreground service is not needed if your app runs on a platform where it will never be put to background.
+
+#### Steps to join meeting
 - Provide Mic(RecordAudio) and Camera Permissions either by using BJN SDK permissionService or by Android SDK APIs
 - Get and add SelfVideoFragment and enableSelfVideoPreview to start the self video
 - Get and use meeting service and invoke join APIs to join a meeting
@@ -165,6 +177,83 @@ Note that by default the current layout will be the People layout or it will be 
 *participants* provides for list of meeting participants. The list will be published on any change in the number of meeting participants or the change in properties of any of the current participants. Any change will reflect in the content of the list and the list reference remains same all throughout the meeting instance.
 
 *selfParticipant* represents self. Provides for any changes in properties of the self.
+
+#### Content Share Feature :
+
+Provides facility to share content within the meeting, there by enhances the collaborative experience of the meeting session. Our SDK currently supports content share in the form of full device's screen share.
+
+##### Sharing the Screen :
+This is a full device screen share, where the SDK will have access to all of the information that is visible on the screen or played from your device while recording or casting. This includes information such as passwords, payment details, photos, messages, and audio that you play. This information about data captured is prompted to the user as a part of starting screen share permission consent dialog and the data populated within the dialog comes from android framework.
+
+###### Feature pre requisites :
+- Permission to capture screen data using android's Media Projection Manager
+- Foreground service
+
+###### Sample code to ask permission :
+
+      MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+      startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREEN_SHARE_REQUEST_CODE);
+
+The above request will result in a permission dialog like 
+
+<img width="320" alt="ScreenSharePermissionDialog" src="https://user-images.githubusercontent.com/23289872/114588998-e2e28e00-9ca4-11eb-850c-7b0396a068fd.png">
+
+Note that, this is a system prompted dialog where the name in the dialog will be the app name and the content is a predefined by the Android System.
+
+###### Start foreground service, Screen Share :
+Once you get the result of the permission, start a service and then invoke _startContentShare_ API :
+
+**Note:** If you already have a foreground service running for the meeting, then an explicit service for screen sharing is not needed.
+Apps targeting SDK version `Build.VERSION_CODES.Q` or later should specify the foreground service type using the attribute `R.attr.foregroundServiceType`
+in the service element of the app's manifest file as below
+
+      <service
+         android:name=".YourForegroundService"
+         android:stopWithTask="true"
+         android:foregroundServiceType="mediaProjection"/>
+
+###### Invoke content share start API :
+ 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch (requestCode) {
+            case SCREEN_SHARE_REQUEST_CODE:
+                if (data != null) {
+                     startYourForegroundService() // start your service if there is not one already for meeting
+                     mMeetingService.startContentShare(new ContentShareType.Screen(data));
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+    
+###### Start Share API :
+`startContentShare(contentShareType: ContentShareType)`
+
+###### Stop Share API : 
+`stopContentShare()`
+
+###### Observables with Screen Share feature :
+- contentShareState - provides for screen share current state
+- contentShareEvent - provides for screen share events
+- contentShareAvailability - provides for information about content share feature being available or not. Content share may not be available in cases such as an access disabled by moderator, access disabled by admin, due to lack of meeting privilege and enablement of moderator only share.
+
+###### User experience recommendation :
+Whenever Screen Share starts,
+- Put the app to background there by easing the user to chose screen/app of his choice
+- Have a overlay floater button out of app, which can be used to stopping the screen share
+- Stopping screen share using floater button can bring the app back to foreground
+- Put an overlay border around the screen to indicate that the screen share in progress
+
+#### Log Upload Feature :
+Provides for uploading logs to BJN sdk log server. The API takes user comments and the user name. 
+Name of the user serves as an unique identifier for us to identify the logs uploaded.
+
+##### API : 
+`uploadLog(comments: String, username: String)`
+
+##### Single Result : 
+AlreadyUploading, Success, Failed
 
 #### Subscriptions (ObservableValue and Rx Single's):
 
