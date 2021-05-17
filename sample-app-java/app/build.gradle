@@ -25,10 +25,6 @@ android {
         }
     }
 
-    lintOptions {
-        disable 'RxIOSchedulerUsageFound', 'DocumentationOnClassMissing', 'CopyrightNotHandled'
-    }
-
     packagingOptions {
         exclude 'META-INF/rxkotlin.kotlin_module'
     }
