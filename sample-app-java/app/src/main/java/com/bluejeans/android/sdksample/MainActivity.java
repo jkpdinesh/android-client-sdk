@@ -47,9 +47,9 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
 import static com.bluejeans.android.sdksample.utils.AudioDeviceHelper.getAudioDeviceName;
@@ -91,11 +91,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // permission service needs activity to be registered before calling request for permissions
+        mPermissionService.register(this);
         initViews();
         checkCameraPermissionAndStartSelfVideo();
         activateSDKSubscriptions();
     }
-
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -105,7 +106,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             configureLandscapeView();
         }
-        mMeetingService.setSelfVideoOrientation(this);
+        Log.d(TAG, "onConfigurationChanged");
+
+        /* The multi-stream remote video fragment computes size at run-time, when handling config change and using
+        viewpager2, we need to make sure video fragment or video fragment's parent is visible on Config change inorder to
+        propagate dimensions at runtime.*/
+        mViewPager.setCurrentItem(0);
     }
 
     @Override
@@ -122,9 +128,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 checkMinimumPermissionsAndJoin();
                 break;
             case R.id.imgClose:
-                endMeeting();
+                mMeetingService.endMeeting();
                 mMeetingService.enableSelfVideoPreview(!mIsVideoMuted);
-                showOutOfMeetingView();
+                endMeeting();
                 break;
             case R.id.imgMenuOption:
                 mBottomSheetFragment.show(getSupportFragmentManager(), mBottomSheetFragment.getTag());
@@ -197,9 +203,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startSelfVideo();
         } else {
             PermissionService.Permission[] arr = {PermissionService.Permission.Camera.INSTANCE};
-            mDisposable.add(mPermissionService.requestPermissions(this, arr).subscribe(
-                    isGranted -> {
-                        if (isGranted) {
+            mDisposable.add(mPermissionService.requestPermissions(arr).subscribe(
+                    grantedStatus -> {
+                        if (grantedStatus == PermissionService.RequestStatus.Granted.INSTANCE) {
                             startSelfVideo();
                         } else {
                             Log.d(TAG, "Camera permission denied");
@@ -229,9 +235,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void requestMinimumPermissionsAndJoin() {
-        mDisposable.add(mPermissionService.requestAllPermissions(this).subscribe(
+        mDisposable.add(mPermissionService.requestAllPermissions().subscribe(
                 areAllPermissionsGranted -> {
-                    if (areAllPermissionsGranted) {
+                    if (areAllPermissionsGranted == PermissionService.RequestStatus.Granted.INSTANCE) {
                         joinMeeting();
                     } else {
                         Log.i(TAG, "Not enough permissions to join a meeting");
@@ -252,14 +258,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mDisposable.add(mMeetingService.joinMeeting(
                 new MeetingService.JoinParams
                         (meetingId, passcode, name))
+                .subscribeOn(Schedulers.single())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         result -> {
+                            Log.i(TAG, "Join state is " + result);
                             if (result == MeetingService.JoinResult.Success.INSTANCE) {
                                 // Explicitly apply the current AV mute states as per user
                                 // expectation after join success.
                                 // SDK does not provide a scope to apply mute states out of meeting
-                                mMeetingService.setAudioMuted(mIsAudioMuted);
-                                mMeetingService.setVideoMuted(mIsVideoMuted);
+                                if (mIsAudioMuted) {
+                                    mMeetingService.setAudioMuted(mIsAudioMuted);
+                                }
+                                if (mIsVideoMuted) {
+                                    mMeetingService.setVideoMuted(mIsVideoMuted);
+                                }
                                 mMeetingService.enableSelfVideoPreview(false);
                                 OnGoingMeetingService.startService(this);
                             } else {
@@ -273,8 +286,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void endMeeting() {
-        mMeetingService.endMeeting();
         OnGoingMeetingService.stopService(this);
+        showOutOfMeetingView();
     }
 
     // Return Unit.INSTANCE; is needed for a kotlin java interop
@@ -285,6 +298,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.i(TAG, " Meeting state " + state);
                     if (state instanceof MeetingService.MeetingState.Connected) {
                         showInMeetingView();
+                    } else if (state instanceof MeetingService.MeetingState.Idle) {
+                        endMeeting();
                     }
                     return Unit.INSTANCE;
                 },
@@ -331,7 +346,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void subscribeForAudioMuteStatus() {
         mDisposable.add(mMeetingService.getAudioMuted().subscribe(
                 isMuted -> {
-                    // This could be due to local mute or remote mute
+                    if (isMuted != null) {
+                        // This could be due to local mute or remote mute
+                        toggleAudioMuteUnMuteView(isMuted);
+                    }
                     Log.i(TAG, " Audio Mute state " + isMuted);
                     return Unit.INSTANCE;
                 },
@@ -342,9 +360,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void subscribeForVideoMuteStatus() {
-        mDisposable.add(mMeetingService.getVideoMuted().subscribe(
+        mDisposable.add(mMeetingService.getVideoMuted().subscribeOnUI(
                 isMuted -> {
-                    // This could be due to local mute or remote mute
+                    if (isMuted != null) {
+                        // This could be due to local mute or remote mute
+                        toggleVideoMuteUnMuteView(isMuted);
+                    }
+
                     Log.i(TAG, " Video Mute state " + isMuted);
                     return Unit.INSTANCE;
                 },
@@ -622,7 +644,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (mVideoState instanceof MeetingService.VideoState.Inactive.SingleParticipant) {
                 showProgress("You are the only participant. Please wait some one to join.");
             } else if (mVideoState instanceof MeetingService.VideoState.Inactive.NoOneHasVideo) {
-                showProgress("No one is sharing their video");
+                Log.i(TAG, "No one is sharing their video");
             } else if (mVideoState instanceof MeetingService.VideoState.Inactive.NeedsModerator) {
                 showProgress("Need moderator");
             } else {

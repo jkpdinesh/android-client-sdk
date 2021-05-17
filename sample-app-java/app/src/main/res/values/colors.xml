@@ -9,4 +9,5 @@
     <color name="roster_endColor">#e4f1f9</color>
 
     <color name="title_bar_color">#CCF8FBFC</color>
+    <color name="peopleLayoutMoreText">#99000000</color>
 </resources>

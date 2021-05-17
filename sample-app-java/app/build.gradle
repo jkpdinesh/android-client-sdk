@@ -10,8 +10,8 @@ android {
         applicationId "com.bluejeans.android.sdksample"
         minSdkVersion 26
         targetSdkVersion 29
-        versionCode 3
-        versionName "1.0.0-alpha.3"
+        versionCode 4
+        versionName "1.0.0-alpha.4"
         multiDexEnabled true
     }
 
@@ -24,6 +24,15 @@ android {
             minifyEnabled false
         }
     }
+
+    lintOptions {
+        disable 'RxIOSchedulerUsageFound', 'DocumentationOnClassMissing', 'CopyrightNotHandled'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/rxkotlin.kotlin_module'
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -35,7 +44,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation "androidx.viewpager2:viewpager2:1.0.0"
-    implementation "com.bluejeans:sdk-android:1.0.0-alpha.3"
+    implementation "com.bluejeans:sdk-android:1.0.0-alpha.4"
+
     //Rx Android
-    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
 }
