@@ -184,7 +184,7 @@ Note: Multistream mode is not supported on devices with number of CPU cores less
 | -------------|:---------------:| :---------------------------------:| :--------------------------------------------:|:--------------------:|
 | Speaker View | 1               | 1                                  | 640x360/640x480  30fps                        | 600 kbps             |
 | People View  | 6               | 1 (main stage) + 5 (film strip)    | main stage 640x360/640x480 30fps              | 1100 kbps            |
-|              |                 |                                    | film strip 160x90//120x90, 15fps              |                      |
+|              |                 |                                    | film strip 160x90/120x90, 15fps              |                      |
 | Gallery View | 9               | 3x3 (landscape) / 4x2+1 (portrait) | 640x360/640x480 (participants < 2)      30 fps| 1200 kbps            |
 |              |                 |                                    | 320x180/240x180 (participants > 2, < 4) 30 fps| 1200 kbps            |
 |              |                 |                                    | 160x90/120x90  (participants > 4)       15 fps| 900 kbps             |
