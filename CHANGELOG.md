@@ -31,7 +31,7 @@ New Features:
 
 Version 1.0.0-alpha.4 *(05-2021)*
 ---------------------------------
-Changes :
+Changes:
 
 - Multi stream support (Sequin video layouts). We would receive individual remote streams in place of single composited video from server providing a better video experience with enhanced meeting layouts.
 - RxJava upgraded from version 2.0 to version 3.0. If consumer app is already using RxJava2 then additionally RxJava3 should be added to consume BlueJeansSDK reactive properties.
