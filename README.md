@@ -4,6 +4,8 @@
 The BlueJeans Android Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
 Note that the product is currently in **alpha** phase of its release cycle and is under active development.
 
+BlueJeans SDK receives individual video streams from each of the video participant in the meeting. This provides an enhanced remote video quality experience with the resolution, fps of individual streams better as compared to a single composited stream in the hybrid model.
+
 ### Features:
 - Audio and Video Permission handling
 - Join, End Meeting
@@ -18,12 +20,13 @@ Note that the product is currently in **alpha** phase of its release cycle and i
 - Participant list
 - Participant properties: Audio mute state, Video mute state, is Self, Name and Unique Identifier
 - Self Participant
-
-### New Features:
 - Screen Share
 - Log Upload
 
-### Current Version: 1.0.0-alpha.3
+### New Features:
+- Multi stream support (Sequin Video Layouts)
+
+### Current Version: 1.0.0-alpha.4
 
 ### Pre-requisites:
 - **Android API level:** Min level 26
@@ -65,11 +68,12 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 
 In app's build.gradle
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-alpha.3"
+implementation "com.bluejeans:sdk-android:1.0.0-alpha.4"
 ```
 
 #### Upgrade Instructions:
 Whenever a newer version of SDK is available, you can consume it by increasing the version in the implementation code block to the new SDK version.
+
 
 ### Initialize BlueJeans SDK:
 Create the object of BlueJeans SDK in application onCreate with help of application context and use it to access all the APIs
@@ -108,8 +112,6 @@ Refer OnGoingMeetingService and MeetingNotificationUtility for sample implementa
 - Get and add SelfVideoFragment and enableSelfVideoPreview to start the self video
 - Get and use meeting service and invoke join APIs to join a meeting
 - Observe for Join API result by subscribing to the Rx Single returned by the join API
-
-
 
 #### Managing Self Video:
 
@@ -159,7 +161,7 @@ On dynamic change in audio devices, SDK's default order of auto selection is as 
 
 Use *selectAudioDevice* and choose the audio device of your choice from the available *audioDevices* list.
 
-#### Video Layouts:
+#### Video Layouts :
 
 Represents how remote participants videos are composed
 - **Speaker**: Only the most recent speaker is shown, taking up the whole video stream.
@@ -169,6 +171,40 @@ Represents how remote participants videos are composed
 *videoLayout* provides for the current video layout *setVideoLayout* can be used to force a Video Layout of your choice.
 
 Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accounts meeting settings. 
+
+
+##### Different layouts, number of tiles:
+- `Speaker layout` to fit one single active speaker participant
+- `People layout` to fit max 6 participants, 1 (main active speaker participant) + 5 (film strip participants)
+- `Gallery layout` can fit maximum number of participant tiles as 9 or 25 depending on SDK input configuration. By default it is 9 participants, ordered in 3x3 style. This is configurable to support max of 25 participants, ordered in 5x5 style
+
+##### Configuring 5x5 in gallery layout:
+BlueJeansSDKInitParams provides a new input parameter called videoConfiguration which can be set with value GalleryLayoutConfiguration.FiveByFive. It is recommended to set this only on larger form factor (>= 7") devices for a better visual experience. Note that using 5x5 will consume higher memory, CPU and battery as compared to other layouts
+
+#### Remote Video :
+
+The BlueJeans SDK's RemoteVideoFragment provides for both the audio and video participant tiles. The organization and the ordering of these tiles depend on factors namely recent dominant speaker and meeting layout, in addition to an algorithm that ensures minimal movement of tiles when recent speaker changes. Video participants are given the priority and are put first in the list and then the audio participants follow.
+
+Note: Multistream mode is not supported on devices with number of CPU cores less than six. In such cases, RemoteVideoFragment would receive single composited stream (participants videos are stitched at the server, organized based on the layout chosen and a single stream is served to the client).
+
+#### Video Resolutions and BW consumption:
+
+- Video receive resolution and BW max:
+
+| Layout       | Max participants| Layout pattern for max participants| Video Receive max resolution, FPS             | Video Receive BW max |
+| -------------|:---------------:| :---------------------------------:| :--------------------------------------------:|:--------------------:|
+| Speaker View | 1               | 1                                  | 640x360/640x480  30fps                        | 600 kbps             |
+| People View  | 6               | 1 (main stage) + 5 (film strip)    | main stage 640x360/640x480 30fps              | 1100 kbps            |
+|              |                 |                                    | film strip 160x90, 15fps                      |                      |
+| Gallery View | 9               | 3x3 (landscape) / 4x2+1 (portrait) | 640x360/640x480 (participants < 2)      30 fps| 1200 kbps            |
+|              |                 |                                    | 320x180/240x180 (participants > 2, < 4) 30 fps| 1200 kbps            |
+|              |                 |                                    | 160x90/120x90  (participants > 4)       15 fps| 900 kbps             |
+|              |                 |                                    | 160x90/120x90  (participants > 9)       15 fps| 1700 kbps            |
+
+- Content receive resolution and BW max: 1920x1080 at 5 fps, 300 kbps
+- Video send resolution and BW max: 640x480 at 30fps, 900 kbps
+
+Note: Endpoints which send video in aspect ratio of 4:3 instead of 16:9, will result in video receive resolution of 640x480 in place of 640x360, 240x180 in place of 320x180 and 120x90 in place of 160x90. Mobile endpoints / BlueJeans android SDK endpoints send video at 640x480 i.e at aspect ratio of 4:3.
 
 #### Participant List:
 
