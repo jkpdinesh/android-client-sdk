@@ -27,3 +27,14 @@ Version 1.0.0-alpha.3 *(04-2021)*
 New Features:
 Content Share.
 Log Upload.
+
+
+Version 1.0.0-alpha.3 *(05-2021)*
+---------------------------------
+Changes :
+
+Multi stream support (Sequin video layouts). We would receive individual remote streams in place of single composited video from server providing a better video experience with enhanced meeting layouts.
+RxJava upgraded from version 2.0 to version 3.0. If consumer app is already using RxJava2 then additionally RxJava3 should be added to consume BlueJeansSDK reactive properties.
+Removed setSelfVideoOrientation. SelfVideoFragment can now handle orientation changes on its own.
+BlueJeansSDKInitParams carries a new configuration parameter by name videoConfiguration which allows you to configure number of maximum participants in the Gallery Video Layout
+Fix for webRTC class conflict issue. Consumer app can now bundle webRTC libraries in addition to BlueJeans SDK
