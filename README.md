@@ -113,17 +113,6 @@ Refer OnGoingMeetingService and MeetingNotificationUtility for sample implementa
 - Get and use meeting service and invoke join APIs to join a meeting
 - Observe for Join API result by subscribing to the Rx Single returned by the join API
 
-#### Managing Self Video:
-
-
-##### Orientation handling:
-
-If Meeting activity handles
-**onConfigurationChanged:** Call *setSelfVideoOrientation*
-
-If Meeting activity recreates on orientation change:
-No need to call any additional API. 
-
 
 ##### Mute:
 
