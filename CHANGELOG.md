@@ -38,3 +38,4 @@ Changes:
 - Removed setSelfVideoOrientation. SelfVideoFragment can now handle orientation changes on its own.
 - BlueJeansSDKInitParams carries a new configuration parameter by name videoConfiguration which allows you to configure number of maximum participants in the Gallery Video Layout
 - Fix for webRTC class conflict issue. Consumer app can now bundle webRTC libraries in addition to BlueJeans SDK
+- Permission service now needs a registration to be done in the onCreate of an activity before requesting for permissions
