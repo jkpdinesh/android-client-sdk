@@ -17,21 +17,21 @@ Features:
 
 Version 1.0.0-alpha.2 *(03-2021)*
 ---------------------------------
-New Features:
+Features:
 - Meeting participants list.
 - Participant properties: Audio mute state, Video mute state, isSelf, Unique identifier and Name.
 - Self Participant details.
 
 Version 1.0.0-alpha.3 *(04-2021)*
 ---------------------------------
-New Features:
+Features:
 - Content Share.
 - Log Upload.
 
 
 Version 1.0.0-alpha.4 *(05-2021)*
 ---------------------------------
-Changes:
+Features / Changes:
 
 - Multi stream support (Sequin video layouts). We would receive individual remote streams in place of single composited video from server providing a better video experience with enhanced meeting layouts.
 - RxJava upgraded from version 2.0 to version 3.0. If consumer app is already using RxJava2 then additionally RxJava3 should be added to consume BlueJeansSDK reactive properties.
@@ -39,3 +39,12 @@ Changes:
 - BlueJeansSDKInitParams carries a new configuration parameter by name videoConfiguration which allows you to configure number of maximum participants in the Gallery Video Layout
 - Fix for webRTC class conflict issue. Consumer app can now bundle webRTC libraries in addition to BlueJeans SDK
 - Permission service now needs a registration to be done in the onCreate of an activity before requesting for permissions
+
+Version 1.0.0-alpha.5 *(05-2021)*
+---------------------------------
+Features:
+
+- Support for enabling torch / flash unit on a device
+- Support to set capture requests such as zoom, exposure on the active video device
+- Misc bug fixes
+
