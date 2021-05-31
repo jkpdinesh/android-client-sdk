@@ -6,6 +6,11 @@ package com.bluejeans.android.sdksample;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Rect;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -15,6 +20,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -73,19 +79,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TabLayout mTabLayout;
     private ImageView mIvMic;
     private ImageView mIvVideo;
+    private ImageView mCameraSettings;
     private EditText mEtEventId, mEtPassCode, mEtName;
     private TextView mTvProgressMsg;
     private Group mInMeetingControls;
     private ImageView mIvRoster;
     private ImageView mIvScreenShare;
     private MenuFragment mBottomSheetFragment;
+    private RosterFragment mRosterFragment = null;
 
     //For alter dialog
     private VideoDeviceAdapter mVideoDeviceAdapter = null;
     private AudioDeviceAdapter mAudioDeviceAdapter = null;
     private VideoLayoutAdapter mVideoLayoutAdapter = null;
 
-    private RosterFragment mRosterFragment = null;
+    private int mZoomScaleFactor = 1; // default value of 1, no zoom to start with
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -164,8 +172,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMeetingService.stopContentShare();
                 }
                 break;
-            default:
+            case R.id.ivCameraSettings:
+                showCameraSettingsDialog();
                 break;
+            default:
         }
     }
 
@@ -528,6 +538,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageView mIvMenuOption = findViewById(R.id.imgMenuOption);
         mIvRoster = findViewById(R.id.imgRoster);
         mIvScreenShare = findViewById(R.id.imgScreenShare);
+        mCameraSettings = findViewById(R.id.ivCameraSettings);
         //Self View
         mSelfView = findViewById(R.id.selfView);
         mIvMic = findViewById(R.id.ivMic);
@@ -555,6 +566,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mIvScreenShare.setOnClickListener(this);
         mIvMic.setOnClickListener(this);
         mIvVideo.setOnClickListener(this);
+        mCameraSettings.setOnClickListener(this);
         mBottomSheetFragment = new MenuFragment(mIOptionMenuCallback);
         mRosterFragment = new RosterFragment();
         mVideoLayoutAdapter = getVideoLayoutAdapter();
@@ -785,5 +797,66 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
+    }
+
+    private void showCameraSettingsDialog() {
+        final AlertDialog.Builder cameraSettingDialog = new AlertDialog.Builder(this);
+        final SeekBar seek = new SeekBar(this);
+        seek.setMax(10);
+        seek.setMin(1);
+        seek.setProgress(mZoomScaleFactor);
+        cameraSettingDialog.setTitle(getString(R.string.camera_setting_title));
+        cameraSettingDialog.setView(seek);
+        try {
+            CameraCharacteristics cameraCharacteristics = getCurrentCameraCharacteristics();
+            seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    mZoomScaleFactor = progress;
+                    Rect activeRegion = cameraCharacteristics
+                            .get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+                    mMeetingService.setRepeatingCaptureRequest(CaptureRequest.SCALER_CROP_REGION,
+                            getCropRegionForZoom(activeRegion, progress), null);
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+
+                }
+            });
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+        cameraSettingDialog.create();
+        cameraSettingDialog.show();
+    }
+
+    /**
+     * It calculates the new crop region by finding out the delta between active camera region's
+     * x and y coordinates and divide by zoom scale factor to get updated camera's region.
+     *
+     * @param cameraActiveRegion
+     * @param zoomFactor
+     * @return Rect coordinates of crop region to be zoomed.
+     */
+    private Rect getCropRegionForZoom(Rect cameraActiveRegion, int zoomFactor) {
+        int xCenter = cameraActiveRegion.width() / 2;
+        int yCenter = cameraActiveRegion.height() / 2;
+        int xDelta = (int) (0.5f * cameraActiveRegion.width() / zoomFactor);
+        int yDelta = (int) (0.5f * cameraActiveRegion.height() / zoomFactor);
+        Rect rect = new Rect(xCenter - xDelta, yCenter - yDelta, xCenter + xDelta,
+                yCenter + yDelta);
+        return rect;
+    }
+
+    private CameraCharacteristics getCurrentCameraCharacteristics() throws CameraAccessException {
+        String cameraId = mMeetingService.getCurrentVideoDevice().getValue().getId();
+        CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+        return cameraManager.getCameraCharacteristics(cameraId);
     }
 }
