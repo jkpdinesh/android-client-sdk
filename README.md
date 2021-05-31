@@ -22,11 +22,13 @@ BlueJeans SDK receives individual video streams from each of the video participa
 - Self Participant
 - Screen Share
 - Log Upload
-
-### New Features:
 - Multi stream support (Sequin Video Layouts)
 
-### Current Version: 1.0.0-alpha.4
+### New Features:
+- Support for enabling torch / flash unit on a device
+- Support to set capture requests such as zoom, exposure on the active video device
+
+### Current Version: 1.0.0-alpha.5
 
 ### Pre-requisites:
 - **Android API level:** Min level 26
@@ -68,7 +70,7 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 
 In app's build.gradle
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-alpha.4"
+implementation "com.bluejeans:sdk-android:1.0.0-alpha.5"
 ```
 
 #### Upgrade Instructions:
