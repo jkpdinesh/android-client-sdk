@@ -154,11 +154,11 @@ Use *selectAudioDevice* and choose the audio device of your choice from the avai
 
 #### Setting capture request:
 
-BlueJeans SDK provides for capability to setRepeatingCaptureRequest which internally deligates the request to Camera2's [setRepeatingRequest](https://developer.android.com/reference/android/hardware/camera2/CameraCaptureSession#setRepeatingRequest(android.hardware.camera2.CaptureRequest,%20android.hardware.camera2.CameraCaptureSession.CaptureCallback,%20android.os.Handler)) on the currently running camera session. This opens up options to set any [CaptureRequest](https://developer.android.com/reference/android/hardware/camera2/CaptureRequest) of integrator's choice. Most commonly used option could be to set Zoom, the same is show cased in the sample test app.
+BlueJeans SDK provides for capability to *setRepeatingCaptureRequest* which internally deligates the request to Camera2's [setRepeatingRequest](https://developer.android.com/reference/android/hardware/camera2/CameraCaptureSession#setRepeatingRequest(android.hardware.camera2.CaptureRequest,%20android.hardware.camera2.CameraCaptureSession.CaptureCallback,%20android.os.Handler)) on the currently running camera session. This opens up options to set any [CaptureRequest](https://developer.android.com/reference/android/hardware/camera2/CaptureRequest) of integrator's choice. Most commonly used option could be to set Zoom, the same is show cased in the sample test app.
 
 #### Setting torch mode:
 
-BlueJeans SDK provides for capability to  turn ON/OFF torch. setTochMode API sets the flash unit's torch mode of the video device for the given ID without opening the device.
+BlueJeans SDK provides for capability to  turn ON/OFF torch. *setTochMode* API sets the flash unit's torch mode of the video device for the given ID without opening the device.
 
 #### Video Layouts:
 
