@@ -158,7 +158,7 @@ BlueJeans SDK provides for capability to *setRepeatingCaptureRequest* which inte
 
 #### Setting torch mode:
 
-BlueJeans SDK provides for capability to  turn ON/OFF torch. *setTochMode* API sets the flash unit's torch mode of the video device for the given ID without opening the device.
+BlueJeans SDK provides for capability to  turn ON/OFF torch. *setTorchMode* API sets the flash unit's torch mode of the video device for the given ID without opening the device.
 
 #### Video Layouts:
 
