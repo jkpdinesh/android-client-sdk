@@ -48,3 +48,12 @@ Features:
 - Support to set capture requests such as zoom, exposure on the active video device
 - Misc bug fixes
 
+
+Version 1.0.0-alpha.6 *(06-2021)*
+---------------------------------
+Features:
+
+- Support for Private and Public Chat
+- Support for Remote Video Mute and Content Mute, useful when app is put to background
+- Kotlin Sample Application
+- Misc bug fixes
