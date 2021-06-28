@@ -3,7 +3,7 @@
  */
 package com.bluejeans.android.sdksample.utils;
 
-import com.bluejeans.bluejeanssdk.meeting.AudioDevice;
+import com.bluejeans.bluejeanssdk.devices.AudioDevice;
 
 public class AudioDeviceHelper {
     public static String getAudioDeviceName(AudioDevice audioDevice) {

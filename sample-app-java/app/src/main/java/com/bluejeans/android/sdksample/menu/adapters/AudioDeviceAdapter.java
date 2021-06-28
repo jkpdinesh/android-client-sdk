@@ -8,14 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.RadioButton;
+import android.widget.CheckedTextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.bluejeans.android.sdksample.R;
-import com.bluejeans.android.sdksample.menu.ItemViewClickListener;
-import com.bluejeans.bluejeanssdk.meeting.AudioDevice;
+import com.bluejeans.bluejeanssdk.devices.AudioDevice;
 
 import java.util.List;
 
@@ -25,7 +23,6 @@ public class AudioDeviceAdapter extends ArrayAdapter<AudioDevice> {
     private final Context mContext;
     private final int mResource;
     private int selectedPosition = -1;
-    private ItemViewClickListener mItemViewClickListener;
 
     public AudioDeviceAdapter(@NonNull Context context, int resource, @NonNull List<AudioDevice> objects) {
         super(context, resource, objects);
@@ -39,9 +36,7 @@ public class AudioDeviceAdapter extends ArrayAdapter<AudioDevice> {
         final AudioDeviceViewHolder viewHolder;
 
         if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) mContext
-                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(mResource,
+            convertView = LayoutInflater.from(mContext).inflate(mResource,
                     parent, false);
             viewHolder = new AudioDeviceViewHolder(convertView);
             convertView.setTag(viewHolder);
@@ -51,39 +46,20 @@ public class AudioDeviceAdapter extends ArrayAdapter<AudioDevice> {
 
         AudioDevice audioDevice = getItem(position);
         viewHolder.rbItemMenu.setText(getAudioDeviceName(audioDevice));
-
         viewHolder.rbItemMenu.setChecked(position == selectedPosition);
-
-        viewHolder.rbItemMenu.setOnClickListener(view -> {
-            selectedPosition = position;
-            notifyDataSetChanged();
-            if (mItemViewClickListener != null) {
-                mItemViewClickListener.onItemClickListener(position);
-            }
-        });
         return convertView;
     }
 
-    class AudioDeviceViewHolder {
-        RadioButton rbItemMenu;
+    static class AudioDeviceViewHolder {
+        CheckedTextView rbItemMenu;
 
         public AudioDeviceViewHolder(View view) {
-            rbItemMenu = (RadioButton) view.findViewById(R.id.rbItemMenu);
+            rbItemMenu = view.findViewById(android.R.id.text1);
         }
-    }
-
-    @Nullable
-    @Override
-    public AudioDevice getItem(int position) {
-        return super.getItem(position);
     }
 
     public void updateSelectedPosition(int selectedPosition) {
         this.selectedPosition = selectedPosition;
         notifyDataSetChanged();
-    }
-
-    public void setItemViewClickListener(ItemViewClickListener itemViewClickListener) {
-        this.mItemViewClickListener = itemViewClickListener;
     }
 }

@@ -91,7 +91,17 @@
         app:layout_constraintBottom_toBottomOf="@+id/imgMenuOption"
         app:layout_constraintTop_toTopOf="@+id/imgMenuOption" />
 
-
+    <TextView
+        android:id="@+id/tvAppVersion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dimen_8"
+        android:text="App Version"
+        android:textColor="@color/appVersionText"
+        android:textSize="@dimen/dimen_14"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <include
         android:id="@id/selfView"

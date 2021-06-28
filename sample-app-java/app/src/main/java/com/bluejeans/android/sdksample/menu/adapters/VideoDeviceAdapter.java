@@ -8,14 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.RadioButton;
+import android.widget.CheckedTextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.bluejeans.android.sdksample.R;
-import com.bluejeans.android.sdksample.menu.ItemViewClickListener;
-import com.bluejeans.bluejeanssdk.selfvideo.VideoDevice;
+import com.bluejeans.bluejeanssdk.devices.VideoDevice;
 
 import java.util.List;
 
@@ -23,7 +21,6 @@ public class VideoDeviceAdapter extends ArrayAdapter<VideoDevice> {
     private final Context mContext;
     private final int mResource;
     private int selectedPosition = -1;
-    private ItemViewClickListener mItemViewClickListener;
 
     public VideoDeviceAdapter(@NonNull Context context, int resource, @NonNull List<VideoDevice> objects) {
         super(context, resource, objects);
@@ -37,9 +34,7 @@ public class VideoDeviceAdapter extends ArrayAdapter<VideoDevice> {
         final VideoDeviceViewHolder viewHolder;
 
         if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) mContext
-                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(mResource,
+            convertView = LayoutInflater.from(mContext).inflate(mResource,
                     parent, false);
             viewHolder = new VideoDeviceViewHolder(convertView);
             convertView.setTag(viewHolder);
@@ -49,39 +44,20 @@ public class VideoDeviceAdapter extends ArrayAdapter<VideoDevice> {
 
         VideoDevice videoDevice = getItem(position);
         viewHolder.rbItemMenu.setText(videoDevice.getName());
-
         viewHolder.rbItemMenu.setChecked(position == selectedPosition);
-
-        viewHolder.rbItemMenu.setOnClickListener(view -> {
-            selectedPosition = position;
-            notifyDataSetChanged();
-            if (mItemViewClickListener != null) {
-                mItemViewClickListener.onItemClickListener(position);
-            }
-        });
         return convertView;
     }
 
-    class VideoDeviceViewHolder {
-        RadioButton rbItemMenu;
+    static class VideoDeviceViewHolder {
+        CheckedTextView rbItemMenu;
 
         public VideoDeviceViewHolder(View view) {
-            rbItemMenu = (RadioButton) view.findViewById(R.id.rbItemMenu);
+            rbItemMenu = view.findViewById(android.R.id.text1);
         }
-    }
-
-    @Nullable
-    @Override
-    public VideoDevice getItem(int position) {
-        return super.getItem(position);
     }
 
     public void updateSelectedPosition(int selectedPosition) {
         this.selectedPosition = selectedPosition;
         notifyDataSetChanged();
-    }
-
-    public void setItemViewClickListener(ItemViewClickListener itemViewClickListener) {
-        this.mItemViewClickListener = itemViewClickListener;
     }
 }

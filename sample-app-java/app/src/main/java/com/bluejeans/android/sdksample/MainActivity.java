@@ -29,24 +29,26 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bjnclientcore.inmeeting.contentshare.ContentShareType;
-import com.bluejeans.android.sdksample.menu.ItemViewClickListener;
 import com.bluejeans.android.sdksample.menu.MenuFragment;
 import com.bluejeans.android.sdksample.menu.MenuFragment.IMenuCallback;
 import com.bluejeans.android.sdksample.menu.adapters.AudioDeviceAdapter;
 import com.bluejeans.android.sdksample.menu.adapters.VideoDeviceAdapter;
 import com.bluejeans.android.sdksample.menu.adapters.VideoLayoutAdapter;
-import com.bluejeans.android.sdksample.roster.RosterFragment;
+import com.bluejeans.android.sdksample.participantlist.ParticipantListFragment;
 import com.bluejeans.android.sdksample.viewpager.ScreenSlidePagerAdapter;
-import com.bluejeans.bluejeanssdk.meeting.AudioDevice;
+import com.bluejeans.bluejeanssdk.devices.AudioDevice;
+import com.bluejeans.bluejeanssdk.devices.VideoDevice;
+import com.bluejeans.bluejeanssdk.devices.VideoDeviceService;
+import com.bluejeans.bluejeanssdk.logging.LoggingService;
 import com.bluejeans.bluejeanssdk.meeting.ContentShareAvailability;
 import com.bluejeans.bluejeanssdk.meeting.ContentShareState;
 import com.bluejeans.bluejeanssdk.meeting.MeetingService;
 import com.bluejeans.bluejeanssdk.permission.PermissionService;
-import com.bluejeans.bluejeanssdk.selfvideo.VideoDevice;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -65,8 +67,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static final int SCREEN_SHARE_REQUEST_CODE = 1;
 
+    private final String appVersionString = "v" + SampleApplication.getBlueJeansSDK().getVersion();
     private final PermissionService mPermissionService = SampleApplication.getBlueJeansSDK().getPermissionService();
     private final MeetingService mMeetingService = SampleApplication.getBlueJeansSDK().getMeetingService();
+    private final VideoDeviceService mVideoDeviceService = SampleApplication.getBlueJeansSDK().getVideoDeviceService();
+    private final LoggingService mLoggingService = SampleApplication.getBlueJeansSDK().getLoggingService();
 
     private final CompositeDisposable mDisposable = new CompositeDisposable();
     private boolean mIsAudioMuted, mIsVideoMuted;
@@ -79,19 +84,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TabLayout mTabLayout;
     private ImageView mIvMic;
     private ImageView mIvVideo;
-    private ImageView mCameraSettings;
     private EditText mEtEventId, mEtPassCode, mEtName;
-    private TextView mTvProgressMsg;
+    private TextView mTvProgressMsg, mAppVersion;
     private Group mInMeetingControls;
-    private ImageView mIvRoster;
+    private ImageView mIvParticipant;
     private ImageView mIvScreenShare;
     private MenuFragment mBottomSheetFragment;
-    private RosterFragment mRosterFragment = null;
+    private ParticipantListFragment mParticipantListFragment = null;
 
     //For alter dialog
     private VideoDeviceAdapter mVideoDeviceAdapter = null;
     private AudioDeviceAdapter mAudioDeviceAdapter = null;
     private VideoLayoutAdapter mVideoLayoutAdapter = null;
+    private AlertDialog mAudioDialog = null;
+    private AlertDialog mVideoLayoutDialog = null;
+    private AlertDialog mVideoDeviceDialog = null;
 
     private int mZoomScaleFactor = 1; // default value of 1, no zoom to start with
 
@@ -137,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.imgClose:
                 mMeetingService.endMeeting();
-                mMeetingService.enableSelfVideoPreview(!mIsVideoMuted);
+                mVideoDeviceService.enableSelfVideoPreview(!mIsVideoMuted);
                 endMeeting();
                 break;
             case R.id.imgMenuOption:
@@ -153,23 +160,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mMeetingService.getMeetingState().getValue() instanceof MeetingService.MeetingState.Connected) {
                     mMeetingService.setVideoMuted(mIsVideoMuted);
                 } else {
-                    mMeetingService.enableSelfVideoPreview(!mIsVideoMuted);
+                    mVideoDeviceService.enableSelfVideoPreview(!mIsVideoMuted);
                 }
                 toggleVideoMuteUnMuteView(mIsVideoMuted);
                 break;
             case R.id.imgRoster:
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.rosterContainer, mRosterFragment)
-                        .addToBackStack(null)
+                        .replace(R.id.rosterContainer, mParticipantListFragment)
+                        .addToBackStack("ParticipantListFragment")
                         .commit();
                 break;
             case R.id.imgScreenShare:
-                if (mMeetingService.getContentShareState().getValue() instanceof ContentShareState.Stopped) {
+                if (mMeetingService.getContentShareService().getContentShareState().getValue() instanceof ContentShareState.Stopped) {
                     MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                     startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREEN_SHARE_REQUEST_CODE);
                 } else {
-                    mMeetingService.stopContentShare();
+                    mMeetingService.getContentShareService().stopContentShare();
                 }
                 break;
             case R.id.ivCameraSettings:
@@ -184,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (requestCode) {
             case SCREEN_SHARE_REQUEST_CODE:
                 if (data != null) {
-                    mMeetingService.startContentShare(new ContentShareType.Screen(data));
+                    mMeetingService.getContentShareService().startContentShare(new ContentShareType.Screen(data));
                 }
                 break;
         }
@@ -202,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         subscribeForCurrentAudioDevice();
         subscribeForVideoDevices();
         subscribeForCurrentVideoDevice();
-        subscribeForRoster();
+        subscribeForParticipants();
         subscribeForContentShareState();
         subscribeForContentShareAvailability();
         subscribeForContentShareEvents();
@@ -230,9 +237,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void startSelfVideo() {
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.selfViewFrame, mMeetingService.getSelfVideoFragment())
+                .replace(R.id.selfViewFrame, mVideoDeviceService.getSelfVideoFragment())
                 .commit();
-        mMeetingService.enableSelfVideoPreview(true);
+        mVideoDeviceService.enableSelfVideoPreview(true);
     }
 
     private void checkMinimumPermissionsAndJoin() {
@@ -254,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 },
                 err -> {
-                    Log.e(TAG, "Error in requesting permissions subscription");
+                    Log.e(TAG, "Error in requesting permissions subscription " + err.getMessage());
                 }));
     }
 
@@ -278,12 +285,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 // expectation after join success.
                                 // SDK does not provide a scope to apply mute states out of meeting
                                 if (mIsAudioMuted) {
-                                    mMeetingService.setAudioMuted(mIsAudioMuted);
+                                    mMeetingService.setAudioMuted(true);
                                 }
                                 if (mIsVideoMuted) {
-                                    mMeetingService.setVideoMuted(mIsVideoMuted);
+                                    mMeetingService.setVideoMuted(true);
                                 }
-                                mMeetingService.enableSelfVideoPreview(false);
+                                mVideoDeviceService.enableSelfVideoPreview(false);
                                 OnGoingMeetingService.startService(this);
                             } else {
                                 showOutOfMeetingView();
@@ -314,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in meeting status subscription");
+                    Log.e(TAG, "Error in meeting status subscription" + err.getMessage());
                     return Unit.INSTANCE;
                 }));
     }
@@ -331,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in video state subscription");
+                    Log.e(TAG, "Error in video state subscription" + err.getMessage());
                     return Unit.INSTANCE;
                 }));
     }
@@ -348,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             return Unit.INSTANCE;
         }, err -> {
-            Log.e(TAG, "Error in remote content subscription");
+            Log.e(TAG, "Error in remote content subscription " + err.getMessage());
             return Unit.INSTANCE;
         }));
     }
@@ -381,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in video mute status subscription");
+                    Log.e(TAG, "Error in video mute status subscription " + err.getMessage());
                     return Unit.INSTANCE;
                 }));
     }
@@ -404,13 +411,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in video layout subscription");
+                    Log.e(TAG, "Error in video layout subscription " + err.getMessage());
                     return Unit.INSTANCE;
                 }));
     }
 
     private void subscribeForCurrentAudioDevice() {
-        mDisposable.add(mMeetingService.getCurrentAudioDevice().subscribeOnUI(
+        mDisposable.add(mMeetingService.getAudioDeviceService().getCurrentAudioDevice().subscribeOnUI(
                 currentAudioDevice -> {
                     if (currentAudioDevice != null) {
                         mBottomSheetFragment.updateAudioDevice(getAudioDeviceName(currentAudioDevice));
@@ -419,14 +426,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in current audio device subscription");
+                    Log.e(TAG, "Error in current audio device subscription " + err.getMessage());
                     return Unit.INSTANCE;
                 }));
 
     }
 
     private void subscribeForAudioDevices() {
-        mDisposable.add(mMeetingService.getAudioDevices().subscribeOnUI(audioDevices -> {
+        mDisposable.add(mMeetingService.getAudioDeviceService().getAudioDevices().subscribeOnUI(audioDevices -> {
                     if (audioDevices != null) {
                         mAudioDeviceAdapter.clear();
                         mAudioDeviceAdapter.addAll(audioDevices);
@@ -435,13 +442,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in audio devices subscription");
+                    Log.e(TAG, "Error in audio devices subscription " + err.getMessage());
                     return Unit.INSTANCE;
                 }));
     }
 
     private void subscribeForCurrentVideoDevice() {
-        mDisposable.add(mMeetingService.getCurrentVideoDevice().subscribeOnUI(
+        mDisposable.add(mVideoDeviceService.getCurrentVideoDevice().subscribeOnUI(
                 currentVideoDevice -> {
                     if (currentVideoDevice != null) {
                         mBottomSheetFragment.updateVideoDevice(currentVideoDevice.getName());
@@ -450,16 +457,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Unit.INSTANCE;
                 },
                 err -> {
-                    Log.e(TAG, "Error in current video device subscription");
+                    Log.e(TAG, "Error in current video device subscription " + err.getMessage());
                     return Unit.INSTANCE;
                 }));
     }
 
-    private void subscribeForRoster() {
-        mDisposable.add(mMeetingService.getParticipants().subscribeOnUI(
+    private void subscribeForParticipants() {
+        mDisposable.add(mMeetingService.getParticipantsService().getParticipants().subscribeOnUI(
                 participantList -> {
-                    if (mRosterFragment != null) {
-                        mRosterFragment.updateMeetingList(participantList);
+                    if (mParticipantListFragment != null && participantList != null) {
+                        mParticipantListFragment.updateMeetingList(participantList);
                     }
                     return Unit.INSTANCE;
                 },
@@ -470,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void subscribeForContentShareAvailability() {
-        mDisposable.add(mMeetingService.getContentShareAvailability().subscribeOnUI(
+        mDisposable.add(mMeetingService.getContentShareService().getContentShareAvailability().subscribeOnUI(
                 contentShareAvailability -> {
                     if (contentShareAvailability instanceof ContentShareAvailability.Available) {
                         mIvScreenShare.setVisibility(View.VISIBLE);
@@ -486,7 +493,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void subscribeForContentShareState() {
-        mDisposable.add(mMeetingService.getContentShareState().subscribeOnUI(
+        mDisposable.add(mMeetingService.getContentShareService().getContentShareState().subscribeOnUI(
                 contentShareState -> {
                     if (contentShareState instanceof ContentShareState.Stopped) {
                         mIvScreenShare.setSelected(false);
@@ -504,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void subscribeForContentShareEvents() {
-        mDisposable.add(mMeetingService.getContentShareEvent()
+        mDisposable.add(mMeetingService.getContentShareService().getContentShareEvent()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -517,7 +524,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void subscribeForVideoDevices() {
-        mDisposable.add(mMeetingService.getVideoDevices().subscribeOnUI(videoDevices -> {
+        mDisposable.add(mVideoDeviceService.getVideoDevices().subscribeOnUI(videoDevices -> {
                     if (videoDevices != null) {
                         mVideoDeviceAdapter.clear();
                         mVideoDeviceAdapter.addAll(videoDevices);
@@ -536,9 +543,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTabLayout = findViewById(R.id.tabLayout);
         ImageView mIvClose = findViewById(R.id.imgClose);
         ImageView mIvMenuOption = findViewById(R.id.imgMenuOption);
-        mIvRoster = findViewById(R.id.imgRoster);
+        mIvParticipant = findViewById(R.id.imgRoster);
         mIvScreenShare = findViewById(R.id.imgScreenShare);
-        mCameraSettings = findViewById(R.id.ivCameraSettings);
+        ImageView mCameraSettings = findViewById(R.id.ivCameraSettings);
         //Self View
         mSelfView = findViewById(R.id.selfView);
         mIvMic = findViewById(R.id.ivMic);
@@ -551,6 +558,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Progress View
         mTvProgressMsg = findViewById(R.id.tvProgressMsg);
         mInMeetingControls = findViewById(R.id.optionGroup);
+        mAppVersion = findViewById(R.id.tvAppVersion);
         // Initialize adapter and click listener
         FragmentStateAdapter pagerAdapter = new ScreenSlidePagerAdapter(this);
         mViewPager.setAdapter(pagerAdapter);
@@ -562,16 +570,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnJoin.setOnClickListener(this);
         mIvClose.setOnClickListener(this);
         mIvMenuOption.setOnClickListener(this);
-        mIvRoster.setOnClickListener(this);
+        mIvParticipant.setOnClickListener(this);
         mIvScreenShare.setOnClickListener(this);
         mIvMic.setOnClickListener(this);
         mIvVideo.setOnClickListener(this);
         mCameraSettings.setOnClickListener(this);
         mBottomSheetFragment = new MenuFragment(mIOptionMenuCallback);
-        mRosterFragment = new RosterFragment();
+        mParticipantListFragment = new ParticipantListFragment();
         mVideoLayoutAdapter = getVideoLayoutAdapter();
         mVideoDeviceAdapter = getVideoDeviceAdapter(new ArrayList<>());
         mAudioDeviceAdapter = getAudioDeviceAdapter(new ArrayList<>());
+        mAppVersion.setText(appVersionString);
     }
 
     private void showJoiningInProgressView() {
@@ -579,15 +588,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTvProgressMsg.setVisibility(View.VISIBLE);
         mTvProgressMsg.setText(getString(R.string.connectingState));
         mInMeetingControls.setVisibility(View.VISIBLE);
+        mAppVersion.setVisibility(View.GONE);
     }
 
     private void showInMeetingView() {
+        mAppVersion.setVisibility(View.GONE);
         mTvProgressMsg.setVisibility(View.GONE);
         mJoinLayout.setVisibility(View.GONE);
         mViewPager.setVisibility(View.VISIBLE);
         mTabLayout.setVisibility(View.VISIBLE);
         mInMeetingControls.setVisibility(View.VISIBLE);
-        mIvRoster.setVisibility(View.VISIBLE);
+        mIvParticipant.setVisibility(View.VISIBLE);
     }
 
     private void showOutOfMeetingView() {
@@ -597,8 +608,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTvProgressMsg.setVisibility(View.GONE);
         mInMeetingControls.setVisibility(View.GONE);
         mJoinLayout.setVisibility(View.VISIBLE);
-        mIvRoster.setVisibility(View.GONE);
+        mIvParticipant.setVisibility(View.GONE);
         mIvScreenShare.setVisibility(View.GONE);
+        mAppVersion.setVisibility(View.VISIBLE);
+        if (mBottomSheetFragment != null && mBottomSheetFragment.isAdded()) {
+            mBottomSheetFragment.dismiss();
+        }
+        if (mParticipantListFragment != null && mParticipantListFragment.isAdded()) {
+            getSupportFragmentManager().beginTransaction().remove(mParticipantListFragment).commit();
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag("ParticipantListFragment");
+            if (fragment != null) {
+                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+            }
+        }
+        if (mAudioDialog != null && mAudioDialog.isShowing()) {
+            mAudioDialog.dismiss();
+        }
+        if (mVideoDeviceDialog != null && mVideoDeviceDialog.isShowing()) {
+            mVideoDeviceDialog.dismiss();
+        }
+        if (mVideoLayoutDialog != null && mVideoLayoutDialog.isShowing()) {
+            mVideoLayoutDialog.dismiss();
+        }
     }
 
     private void showProgress(String msg) {
@@ -705,43 +736,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showVideoLayoutDialog(String videoLayoutName) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.video_layouts));
-        ItemViewClickListener itemViewClickListener = this::selectVideoLayout;
-        mVideoLayoutAdapter.setItemViewClickListener(itemViewClickListener);
-        builder.setAdapter(mVideoLayoutAdapter, null);
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        mVideoLayoutDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.video_layouts))
+                .setAdapter(mVideoLayoutAdapter,
+                        (dialog, which) -> selectVideoLayout(which)).create();
+        mVideoLayoutDialog.show();
     }
 
     private void showAudioDeviceDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.audio_devices));
-        ItemViewClickListener itemViewClickListener = this::selectAudioDevice;
-        mAudioDeviceAdapter.setItemViewClickListener(itemViewClickListener);
-        builder.setAdapter(mAudioDeviceAdapter, null);
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        mAudioDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.audio_devices))
+                .setAdapter(mAudioDeviceAdapter,
+                        (dialog, which) -> selectAudioDevice(which)).create();
+        mAudioDialog.show();
     }
 
     private void showVideoDeviceDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.video_devices));
-        ItemViewClickListener itemViewClickListener = this::selectVideoDevice;
-        mVideoDeviceAdapter.setItemViewClickListener(itemViewClickListener);
-        builder.setAdapter(mVideoDeviceAdapter, null);
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        mVideoDeviceDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.video_devices))
+                .setAdapter(mVideoDeviceAdapter,
+                        (dialog, which) -> selectVideoDevice(which)).create();
+        mVideoDeviceDialog.show();
     }
 
     private void updateCurrentVideoDeviceForAlertDialog(VideoDevice videoDevice) {
-        List<VideoDevice> videoDevices = mMeetingService.getVideoDevices().getValue();
-        mVideoDeviceAdapter.updateSelectedPosition(videoDevices.indexOf(videoDevice));
+        List<VideoDevice> videoDevices = mVideoDeviceService.getVideoDevices().getValue();
+        if (videoDevices != null) {
+            mVideoDeviceAdapter.updateSelectedPosition(videoDevices.indexOf(videoDevice));
+        }
     }
 
     private void updateCurrentAudioDeviceForAlertDialog(AudioDevice currentAudioDevice) {
-        List<AudioDevice> audioDevices = mMeetingService.getAudioDevices().getValue();
-        mAudioDeviceAdapter.updateSelectedPosition(audioDevices.indexOf(currentAudioDevice));
+        List<AudioDevice> audioDevices = mMeetingService.getAudioDeviceService().getAudioDevices().getValue();
+        if (audioDevices != null) {
+            mAudioDeviceAdapter.updateSelectedPosition(audioDevices.indexOf(currentAudioDevice));
+        }
     }
 
     private void updateCurrentVideoLayoutForAlertDialog(String videoLayoutName) {
@@ -749,17 +778,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private VideoLayoutAdapter getVideoLayoutAdapter() {
-        return new VideoLayoutAdapter(this, R.layout.adapter_item_view,
+        return new VideoLayoutAdapter(this, android.R.layout.simple_list_item_single_choice,
                 videoLayoutOptionList());
     }
 
     private VideoDeviceAdapter getVideoDeviceAdapter(List<VideoDevice> videoDevices) {
-        return new VideoDeviceAdapter(this, R.layout.adapter_item_view,
+        return new VideoDeviceAdapter(this, android.R.layout.simple_list_item_single_choice,
                 videoDevices);
     }
 
     private AudioDeviceAdapter getAudioDeviceAdapter(List<AudioDevice> audioDevices) {
-        return new AudioDeviceAdapter(this, R.layout.adapter_item_view,
+        return new AudioDeviceAdapter(this, android.R.layout.simple_list_item_single_choice,
                 audioDevices);
     }
 
@@ -778,16 +807,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void selectAudioDevice(int position) {
-        AudioDevice audioDevice = (AudioDevice) mAudioDeviceAdapter.getItem(position);
-        mMeetingService.selectAudioDevice(audioDevice);
+        AudioDevice audioDevice = mAudioDeviceAdapter.getItem(position);
+        mAudioDeviceAdapter.updateSelectedPosition(position);
+        mMeetingService.getAudioDeviceService().selectAudioDevice(audioDevice);
     }
 
     private void selectVideoDevice(int position) {
-        VideoDevice videoDevice = (VideoDevice) mVideoDeviceAdapter.getItem(position);
-        mMeetingService.selectVideoDevice(videoDevice);
+        mVideoDeviceAdapter.updateSelectedPosition(position);
+        VideoDevice videoDevice = mVideoDeviceAdapter.getItem(position);
+        mVideoDeviceService.selectVideoDevice(videoDevice);
     }
 
     private void selectVideoLayout(int position) {
+        mVideoLayoutAdapter.updateSelectedPosition(position);
         setVideoLayout(mVideoLayoutAdapter.getItem(position));
     }
 
@@ -815,7 +847,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mZoomScaleFactor = progress;
                     Rect activeRegion = cameraCharacteristics
                             .get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-                    mMeetingService.setRepeatingCaptureRequest(CaptureRequest.SCALER_CROP_REGION,
+                    mVideoDeviceService.setRepeatingCaptureRequest(CaptureRequest.SCALER_CROP_REGION,
                             getCropRegionForZoom(activeRegion, progress), null);
                 }
 
@@ -840,8 +872,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * It calculates the new crop region by finding out the delta between active camera region's
      * x and y coordinates and divide by zoom scale factor to get updated camera's region.
      *
-     * @param cameraActiveRegion
-     * @param zoomFactor
+     * @param cameraActiveRegion active area of the image sensor.
+     * @param zoomFactor scale factor
      * @return Rect coordinates of crop region to be zoomed.
      */
     private Rect getCropRegionForZoom(Rect cameraActiveRegion, int zoomFactor) {
@@ -849,14 +881,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int yCenter = cameraActiveRegion.height() / 2;
         int xDelta = (int) (0.5f * cameraActiveRegion.width() / zoomFactor);
         int yDelta = (int) (0.5f * cameraActiveRegion.height() / zoomFactor);
-        Rect rect = new Rect(xCenter - xDelta, yCenter - yDelta, xCenter + xDelta,
+        return new Rect(xCenter - xDelta, yCenter - yDelta, xCenter + xDelta,
                 yCenter + yDelta);
-        return rect;
     }
 
     private CameraCharacteristics getCurrentCameraCharacteristics() throws CameraAccessException {
-        String cameraId = mMeetingService.getCurrentVideoDevice().getValue().getId();
-        CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
-        return cameraManager.getCameraCharacteristics(cameraId);
+        VideoDevice currentVideoDevice = mVideoDeviceService.getCurrentVideoDevice().getValue();
+        if (currentVideoDevice != null) {
+            String cameraId = mVideoDeviceService.getCurrentVideoDevice().getValue().getId();
+            CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+            return cameraManager.getCameraCharacteristics(cameraId);
+        } else {
+            throw new IllegalStateException("No active camera device.");
+        }
     }
 }

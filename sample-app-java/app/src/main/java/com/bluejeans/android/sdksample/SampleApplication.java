@@ -8,14 +8,22 @@ import android.app.Application;
 import com.bluejeans.bluejeanssdk.BlueJeansSDK;
 import com.bluejeans.bluejeanssdk.BlueJeansSDKInitParams;
 
+import android.util.Log;
+
 public class SampleApplication extends Application {
 
     private static BlueJeansSDK blueJeansSDK;
+    private static final String TAG = "SampleApplication";
 
     @Override
     public void onCreate() {
         super.onCreate();
         initSDK();
+        Log.i(
+                TAG, "App VersionName " + BuildConfig.VERSION_NAME +
+                        " App VersionCode " + BuildConfig.VERSION_CODE +
+                        " SDK VersionName " + blueJeansSDK.getVersion());
+
     }
 
     private void initSDK() {
