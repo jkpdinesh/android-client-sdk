@@ -53,7 +53,21 @@ Version 1.0.0-alpha.6 *(06-2021)*
 ---------------------------------
 Features:
 
+- API re-architecture. APIs are grouped into several relevant services. See the image attached for architecture and API changes.
 - Support for Private and Public Chat
 - Support for Remote Video Mute and Content Mute, useful when app is put to background
 - Kotlin Sample Application
+- New Meeting State : Validating
 - Misc bug fixes
+
+Architecture:
+
+![BlueJeansSDKArch](https://user-images.githubusercontent.com/23289872/123610017-cf63af80-d81d-11eb-998e-756ba4fdd6db.jpg)
+
+API changes:
+
+<img width="513" alt="APIChanges" src="https://user-images.githubusercontent.com/23289872/123609917-bc50df80-d81d-11eb-9442-1151c8760b3a.png">
+
+
+
+
