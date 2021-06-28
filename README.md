@@ -45,6 +45,9 @@ BlueJeans SDK participant receives individual video streams from each of the vid
    - Source and Target compatibility to java version 1_8 in gradle
    - RxJava, RxKotlin
 
+### API Architecture
+![BlueJeansSDKArch](https://user-images.githubusercontent.com/23289872/123635962-eca67700-d839-11eb-8067-86da7b3f8a32.jpg)
+
 ### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
 
 ### Integration Steps:
