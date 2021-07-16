@@ -18,12 +18,10 @@ public class ScreenSlidePagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        switch (position) {
-            case 1:
-                return new ContentViewFragment();
-            default:
-                return new RemoteViewFragment();
+        if (position == 1) {
+            return new ContentViewFragment();
         }
+        return new RemoteViewFragment();
     }
 
     @Override

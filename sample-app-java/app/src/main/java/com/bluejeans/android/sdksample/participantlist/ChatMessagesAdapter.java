@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2021 Blue Jeans Network, Inc. All rights reserved.
  */
 package com.bluejeans.android.sdksample.participantlist;
@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bjnclientcore.inmeeting.chat.model.ChatMessage;
-import com.bjnclientcore.inmeeting.chat.model.Sender;
 import com.bluejeans.android.sdksample.R;
 
 import java.util.ArrayList;
@@ -25,8 +24,8 @@ import kotlin.jvm.Synchronized;
 
 public class ChatMessagesAdapter extends ListAdapter<ChatMessage, ChatMessagesAdapter.ChatMessageViewHolder> {
 
-    private ArrayList<ChatMessage> chatMessages = new ArrayList<>();
-    private boolean isChatPublic;
+    private final ArrayList<ChatMessage> chatMessages = new ArrayList<>();
+    private final boolean isChatPublic;
 
     public ChatMessagesAdapter(boolean isPublicChat, DiffUtil.ItemCallback<ChatMessage> callback) {
         super(callback);
@@ -66,7 +65,6 @@ public class ChatMessagesAdapter extends ListAdapter<ChatMessage, ChatMessagesAd
     public void updateMessages(List<ChatMessage> msgs) {
         if (msgs.isEmpty()) return;
         if (chatMessages.isEmpty()) {
-            chatMessages.clear();
             chatMessages.addAll(msgs);
             notifyDataSetChanged();
         } else {

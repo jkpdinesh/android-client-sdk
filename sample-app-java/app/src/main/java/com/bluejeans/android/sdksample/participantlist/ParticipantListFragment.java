@@ -28,14 +28,12 @@ import com.bluejeans.bluejeanssdk.meeting.chat.PrivateChatService;
 import com.bluejeans.bluejeanssdk.meeting.chat.PublicChatService;
 import com.bluejeans.rxextensions.ObservableComputed;
 import com.bluejeans.rxextensions.ObservableValue;
-import com.bluejeans.rxextensions.utils.Optional;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
 
 /**
  * Participant display fragment
@@ -49,10 +47,10 @@ public class ParticipantListFragment extends Fragment implements ParticipantChat
 
     private ParticipantListAdapter participantListAdapter;
     private RecyclerView participantListView;
-    private ImageView chatIcon, closeIcon;
+    private ImageView chatIcon, closeIcon, peopleIcon;
     private TextView unreadChatText, titleText;
     static final String EVERYONE = "Everyone";
-    private ArrayList<ParticipantsService.Participant> participantsList = new ArrayList();
+    private final ArrayList<ParticipantsService.Participant> participantsList = new ArrayList<>();
     private CompositeDisposable chatDisposable = null;
     private CompositeDisposable participantDisposable = null;
     CompositeDisposable countDisposable = new CompositeDisposable();
@@ -72,9 +70,10 @@ public class ParticipantListFragment extends Fragment implements ParticipantChat
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         participantListView = view.findViewById(R.id.rvRosterParticipants);
-        participantListView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+        participantListView.addItemDecoration(new DividerItemDecoration(requireActivity(), DividerItemDecoration.VERTICAL));
         loadParticipantListAdapter();
         chatIcon = view.findViewById(R.id.ivChatBubble);
+        peopleIcon = view.findViewById(R.id.ivPeople);
         unreadChatText = view.findViewById(R.id.tvUnreadChatCount);
         unreadChatText.setVisibility(View.GONE);
         titleText = view.findViewById(R.id.tvRosterHeading);
@@ -128,6 +127,7 @@ public class ParticipantListFragment extends Fragment implements ParticipantChat
                 .addToBackStack("ParticipantChat")
                 .commit();
         chatIcon.setVisibility(View.GONE);
+        peopleIcon.setVisibility(View.GONE);
         closeIcon.setImageResource(R.drawable.ic_back_icon);
         selectedView = FragmentView.CHAT_VIEW;
     }
@@ -145,32 +145,37 @@ public class ParticipantListFragment extends Fragment implements ParticipantChat
             if (selectedView == FragmentView.CHAT_VIEW) {
                 handleChatViewBack();
             } else {
-                getActivity().onBackPressed();
+               requireActivity().onBackPressed();
             }
         });
         chatIcon.setOnClickListener(v -> {
-            if (publicChatService != null && selectedView != FragmentView.CHAT_PARTICIPANTS &&
-                    selectedView != FragmentView.CHAT_VIEW) {
+            if (publicChatService != null && selectedView == FragmentView.PARTICIPANT_LIST) {
                 if (chatDisposable == null || chatDisposable.isDisposed()) {
                     chatDisposable = new CompositeDisposable();
                 }
                 selectedView = FragmentView.CHAT_PARTICIPANTS;
                 loadChatAdapter();
-                setTitle("Chat People");
-                chatIcon.setImageResource(R.drawable.people_icon);
+                setTitle(getString(R.string.chat));
+                chatIcon.setVisibility(View.GONE);
+                peopleIcon.setVisibility(View.VISIBLE);
                 unreadChatText.setVisibility(View.GONE);
                 totalCount = 0;
                 handleUnreadCountDisplay();
-            } else if (selectedView == FragmentView.CHAT_PARTICIPANTS && publicChatService == null) {
+            } else if (selectedView != FragmentView.CHAT_PARTICIPANTS && publicChatService == null) {
                 Toast.makeText(getContext(), "Chat Unavailable", Toast.LENGTH_SHORT).show();
-            } else {
-                chatDisposable.dispose();
-                selectedView = FragmentView.PARTICIPANT_LIST;
-                loadParticipantListAdapter();
-                setTitle("People");
-                chatIcon.setImageResource(R.drawable.ic_chat_bar);
-                unreadChatText.setVisibility(View.VISIBLE);
             }
+        });
+
+        peopleIcon.setOnClickListener(v -> {
+            if (chatDisposable != null) {
+                chatDisposable.dispose();
+            }
+            selectedView = FragmentView.PARTICIPANT_LIST;
+            loadParticipantListAdapter();
+            setTitle(getString(R.string.people));
+            chatIcon.setVisibility(View.VISIBLE);
+            peopleIcon.setVisibility(View.GONE);
+            unreadChatText.setVisibility(View.VISIBLE);
         });
     }
 
@@ -208,15 +213,15 @@ public class ParticipantListFragment extends Fragment implements ParticipantChat
 
     private void handleChatViewBack() {
         getChildFragmentManager().popBackStack();
-        chatIcon.setVisibility(View.VISIBLE);
-        chatIcon.setImageResource(R.drawable.people_icon);
+        chatIcon.setVisibility(View.GONE);
+        peopleIcon.setVisibility(View.VISIBLE);
         unreadChatText.setVisibility(View.GONE);
         participantListView.setVisibility(View.VISIBLE);
         selectedView = FragmentView.CHAT_PARTICIPANTS;
         closeIcon.setImageResource(R.drawable.ic_close_dark_blue);
-        setTitle("Chat People");
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(this.getView().getWindowToken(), 0);
+        setTitle(getString(R.string.chat));
+        InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(this.requireView().getWindowToken(), 0);
     }
 
     private void loadParticipantListAdapter() {
@@ -265,16 +270,14 @@ public class ParticipantListFragment extends Fragment implements ParticipantChat
                 countDisposable.dispose();
             }
             countDisposable = new CompositeDisposable();
-            ObservableValue<Integer> countObserver = ObservableComputed.Companion.create(publicChatService.getUnreadMessagesCount(), privateChatService.getUnreadMessagesCount(), true, new Function2<Optional<Integer>, Optional<Integer>, Integer>() {
-                @Override
-                public Integer invoke(Optional<Integer> integer, Optional<Integer> integer2) {
-                    if (integer.getValue() == null && integer2.getValue() == null) return 0;
-                    else if (integer.getValue() != null && integer2.getValue() == null)
-                        return integer.getValue();
-                    else if (integer.getValue() == null && integer2.getValue() != null)
-                        return integer2.getValue();
-                    else return integer.getValue() + integer2.getValue();
-                }
+            ObservableValue<Integer> countObserver;
+            countObserver = ObservableComputed.Companion.create(publicChatService.getUnreadMessagesCount(), privateChatService.getUnreadMessagesCount(), true, (integer, integer2) -> {
+                if (integer.getValue() == null && integer2.getValue() == null) return 0;
+                else if (integer.getValue() != null && integer2.getValue() == null)
+                    return integer.getValue();
+                else if (integer.getValue() == null && integer2.getValue() != null)
+                    return integer2.getValue();
+                else return integer.getValue() + integer2.getValue();
             });
             countDisposable.add(countObserver.subscribeOnUI(c -> {
                 totalCount = c;

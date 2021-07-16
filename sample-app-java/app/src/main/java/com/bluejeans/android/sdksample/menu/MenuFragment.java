@@ -17,12 +17,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 
 public class MenuFragment extends BottomSheetDialogFragment {
-    private IMenuCallback mIMenuCallback;
+    private final IMenuCallback mIMenuCallback;
     private MaterialButton mMbVideoLayout, mMbAudioDevice, mMbVideoDevice;
     private String videoLayout = "";
     private String currentAudioDevice = "";
     private String currentVideoDevice = "";
-    private BottomSheetBehavior<View> bottomSheetBehavior;
 
     public interface IMenuCallback {
         void showVideoLayoutView(String videoLayoutName);
@@ -50,7 +49,7 @@ public class MenuFragment extends BottomSheetDialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        bottomSheetBehavior = BottomSheetBehavior.from((View) requireView().getParent());
+        BottomSheetBehavior<View> bottomSheetBehavior = BottomSheetBehavior.from((View) requireView().getParent());
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
 

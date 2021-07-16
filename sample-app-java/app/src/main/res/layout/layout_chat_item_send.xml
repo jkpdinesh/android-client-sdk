@@ -20,12 +20,20 @@
         android:id="@+id/tvMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/chatbubble_self"
-        android:maxWidth="200dp"
-        android:textColor="@color/black"
-        android:textSize="@dimen/_12dp"
+        android:layout_marginTop="@dimen/dimen_4"
+        android:layout_marginEnd="@dimen/_2dp"
+        android:autoLink="web"
+        android:background="@drawable/background_chat_text"
+        android:backgroundTint="@color/chat_blue"
+        android:lineSpacingExtra="@dimen/_6sp"
+        android:linksClickable="true"
+        android:maxWidth="@dimen/chat_bubble_max_width"
+        android:padding="@dimen/dimen_10"
         android:visibility="gone"
+        android:textAppearance="@style/TextAppearance.Regular14"
+        android:textColor="@color/blue_back_ground_text_color"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

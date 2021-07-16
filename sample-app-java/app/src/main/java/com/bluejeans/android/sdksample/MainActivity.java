@@ -3,6 +3,8 @@
  */
 package com.bluejeans.android.sdksample;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -13,22 +15,28 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
@@ -54,6 +62,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -65,13 +74,11 @@ import static com.bluejeans.android.sdksample.utils.AudioDeviceHelper.getAudioDe
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     public static final String TAG = "MainActivity";
 
-    public static final int SCREEN_SHARE_REQUEST_CODE = 1;
-
     private final String appVersionString = "v" + SampleApplication.getBlueJeansSDK().getVersion();
     private final PermissionService mPermissionService = SampleApplication.getBlueJeansSDK().getPermissionService();
+    private final LoggingService mLoggingService = SampleApplication.getBlueJeansSDK().getLoggingService();
     private final MeetingService mMeetingService = SampleApplication.getBlueJeansSDK().getMeetingService();
     private final VideoDeviceService mVideoDeviceService = SampleApplication.getBlueJeansSDK().getVideoDeviceService();
-    private final LoggingService mLoggingService = SampleApplication.getBlueJeansSDK().getLoggingService();
 
     private final CompositeDisposable mDisposable = new CompositeDisposable();
     private boolean mIsAudioMuted, mIsVideoMuted;
@@ -82,13 +89,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ConstraintLayout mSelfView, mJoinLayout;
     private ViewPager2 mViewPager;
     private TabLayout mTabLayout;
-    private ImageView mIvMic;
+    private ImageView mIvMic, mIvClose, mIvMenuOption, mIvLogUploadButton;
     private ImageView mIvVideo;
     private EditText mEtEventId, mEtPassCode, mEtName;
     private TextView mTvProgressMsg, mAppVersion;
-    private Group mInMeetingControls;
+    private ConstraintLayout mControlPanelContainer;
     private ImageView mIvParticipant;
     private ImageView mIvScreenShare;
+    private ImageView mCameraSettings;
     private MenuFragment mBottomSheetFragment;
     private ParticipantListFragment mParticipantListFragment = null;
 
@@ -99,7 +107,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AlertDialog mAudioDialog = null;
     private AlertDialog mVideoLayoutDialog = null;
     private AlertDialog mVideoDeviceDialog = null;
-
+    private AlertDialog mUploadLogsDialog = null;
+    private AlertDialog mCameraSettingsDialog = null;
+    private ProgressBar mProgressBar = null;
     private int mZoomScaleFactor = 1; // default value of 1, no zoom to start with
 
     @Override
@@ -136,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -174,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.imgScreenShare:
                 if (mMeetingService.getContentShareService().getContentShareState().getValue() instanceof ContentShareState.Stopped) {
                     MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                    startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREEN_SHARE_REQUEST_CODE);
+                    activityResultLauncher.launch(mediaProjectionManager.createScreenCaptureIntent());
                 } else {
                     mMeetingService.getContentShareService().stopContentShare();
                 }
@@ -182,21 +193,90 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.ivCameraSettings:
                 showCameraSettingsDialog();
                 break;
+
+            case R.id.imgUploadLogs:
+                showUploadLogsDialog();
+                break;
             default:
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        switch (requestCode) {
-            case SCREEN_SHARE_REQUEST_CODE:
-                if (data != null) {
-                    mMeetingService.getContentShareService().startContentShare(new ContentShareType.Screen(data));
+    private void showUploadLogsDialog() {
+        mUploadLogsDialog = new AlertDialog.Builder(this)
+                .setView(R.layout.submit_log_dialog).create();
+        mUploadLogsDialog.setCanceledOnTouchOutside(true);
+        mUploadLogsDialog.show();
+        EditText editText = mUploadLogsDialog.findViewById(R.id.description);
+        Button submitButton = mUploadLogsDialog.findViewById(R.id.btn_submit);
+        mProgressBar = mUploadLogsDialog.findViewById(R.id.progressBar);
+        if (editText != null) {
+            editText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 }
-                break;
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (submitButton != null) {
+                        submitButton.setEnabled(count != 0);
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+            });
         }
-        super.onActivityResult(requestCode, resultCode, data);
+        if (submitButton != null) {
+            submitButton.setOnClickListener(v -> {
+                String description = Objects.requireNonNull(editText).getText().toString();
+                submitButton.setEnabled(false);
+                mProgressBar.setVisibility(View.VISIBLE);
+                uploadLogs(description);
+            });
+        }
     }
+
+    private void uploadLogs(String comments) {
+        if (!TextUtils.isEmpty(comments)) {
+            String userName = (TextUtils.isEmpty(mEtName.getText().toString()) ? "Guest"
+                    : mEtName.getText().toString());
+            mDisposable.add(
+                    mLoggingService.uploadLog(comments, userName)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe( result ->
+                                    {
+                                        Log.i(TAG, "Log uploaded successfully " + result);
+                                            Toast.makeText(
+                                                    this, getString(R.string.upload_logs_success),
+                                                    Toast.LENGTH_SHORT
+                                            ).show();
+                                            mUploadLogsDialog.dismiss();
+                        },
+                                    error -> {
+                Log.e(TAG, "Error while uploading logs");
+                mProgressBar.setVisibility(View.GONE);
+                Toast.makeText(
+                        this, getString(R.string.upload_logs_failure),
+                        Toast.LENGTH_SHORT
+                ).show();
+            }));
+        } else {
+            Toast.makeText(this, "Please enter your comments.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null) {
+                        mMeetingService.getContentShareService()
+                                .startContentShare(new ContentShareType.Screen(data));
+                    }
+                }
+            });
 
     private void activateSDKSubscriptions() {
         subscribeForMeetingStatus();
@@ -228,9 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Log.d(TAG, "Camera permission denied");
                         }
                     },
-                    err -> {
-                        Log.e(TAG, "Error in requesting permission subscription");
-                    }));
+                    err -> Log.e(TAG, "Error in requesting permission subscription")));
         }
     }
 
@@ -260,9 +338,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i(TAG, "Not enough permissions to join a meeting");
                     }
                 },
-                err -> {
-                    Log.e(TAG, "Error in requesting permissions subscription " + err.getMessage());
-                }));
+                err -> Log.e(TAG, "Error in requesting permissions subscription " + err.getMessage())));
     }
 
     private void joinMeeting() {
@@ -296,9 +372,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 showOutOfMeetingView();
                             }
                         },
-                        error -> {
-                            showOutOfMeetingView();
-                        }));
+                        error -> showOutOfMeetingView()));
 
     }
 
@@ -314,9 +388,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 state -> {
                     Log.i(TAG, " Meeting state " + state);
                     if (state instanceof MeetingService.MeetingState.Connected) {
+                        // add this flag to avoid screen shots.
+                        // This also allows protection of screen during screen casts from 3rd party apps.
+                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
                         showInMeetingView();
                     } else if (state instanceof MeetingService.MeetingState.Idle) {
                         endMeeting();
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
                     }
                     return Unit.INSTANCE;
                 },
@@ -344,7 +422,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void subscribeForRemoteContentState() {
-        mDisposable.add(mMeetingService.getReceivingRemoteContent().subscribeOnUI(isReceivingRemoteContent -> {
+        mDisposable.add(mMeetingService.getContentShareService().getReceivingRemoteContent().subscribeOnUI(isReceivingRemoteContent -> {
             if (isReceivingRemoteContent != null) {
                 mIsRemoteContentAvailable = isReceivingRemoteContent;
                 if (isReceivingRemoteContent) {
@@ -498,7 +576,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (contentShareState instanceof ContentShareState.Stopped) {
                         mIvScreenShare.setSelected(false);
                         MeetingNotificationUtility.updateNotificationMessage(this, getString(R.string.meeting_notification_message));
-                    } else {
+                    } else if (contentShareState != null) {
                         mIvScreenShare.setSelected(true);
                         MeetingNotificationUtility.updateNotificationMessage(this, getString(R.string.screen_share_notification_message));
                     }
@@ -515,12 +593,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        contentShareEvent -> {
-                            Log.i(TAG, "Content share event is " + contentShareEvent);
-                        },
-                        err -> {
-                            Log.e(TAG, "Error in content share events subscription" + err.getMessage());
-                        }));
+                        contentShareEvent -> Log.i(TAG, "Content share event is " + contentShareEvent),
+                        err -> Log.e(TAG, "Error in content share events subscription" + err.getMessage())));
     }
 
     private void subscribeForVideoDevices() {
@@ -540,12 +614,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initViews() {
         mViewPager = findViewById(R.id.viewPager);
+        // we are caching the fragment as when user change layout
+        // if not cached, fragment dimensions are returned null resulting in no layout being displayed
+        // user can also use detach and attach fragments on page listener inorder to relayout.
+        mViewPager.setOffscreenPageLimit(1);
         mTabLayout = findViewById(R.id.tabLayout);
-        ImageView mIvClose = findViewById(R.id.imgClose);
-        ImageView mIvMenuOption = findViewById(R.id.imgMenuOption);
+        mIvClose = findViewById(R.id.imgClose);
+        mIvMenuOption = findViewById(R.id.imgMenuOption);
         mIvParticipant = findViewById(R.id.imgRoster);
         mIvScreenShare = findViewById(R.id.imgScreenShare);
-        ImageView mCameraSettings = findViewById(R.id.ivCameraSettings);
+        mCameraSettings = findViewById(R.id.ivCameraSettings);
+        mControlPanelContainer = findViewById(R.id.control_panel_container);
         //Self View
         mSelfView = findViewById(R.id.selfView);
         mIvMic = findViewById(R.id.ivMic);
@@ -557,7 +636,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mEtName = findViewById(R.id.etName);
         //Progress View
         mTvProgressMsg = findViewById(R.id.tvProgressMsg);
-        mInMeetingControls = findViewById(R.id.optionGroup);
         mAppVersion = findViewById(R.id.tvAppVersion);
         // Initialize adapter and click listener
         FragmentStateAdapter pagerAdapter = new ScreenSlidePagerAdapter(this);
@@ -568,6 +646,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Button btnJoin = findViewById(R.id.btnJoin);
         btnJoin.setOnClickListener(this);
+        mIvLogUploadButton = findViewById(R.id.imgUploadLogs);
+        mIvLogUploadButton.setOnClickListener(this);
         mIvClose.setOnClickListener(this);
         mIvMenuOption.setOnClickListener(this);
         mIvParticipant.setOnClickListener(this);
@@ -587,8 +667,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mJoinLayout.setVisibility(View.GONE);
         mTvProgressMsg.setVisibility(View.VISIBLE);
         mTvProgressMsg.setText(getString(R.string.connectingState));
-        mInMeetingControls.setVisibility(View.VISIBLE);
         mAppVersion.setVisibility(View.GONE);
+        mIvClose.setVisibility(View.VISIBLE);
+        mIvMenuOption.setVisibility(View.VISIBLE);
+        mIvLogUploadButton.setVisibility(View.GONE);
+        mControlPanelContainer.setBackgroundResource(R.drawable.meeting_controls_panel_bg);
     }
 
     private void showInMeetingView() {
@@ -597,8 +680,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mJoinLayout.setVisibility(View.GONE);
         mViewPager.setVisibility(View.VISIBLE);
         mTabLayout.setVisibility(View.VISIBLE);
-        mInMeetingControls.setVisibility(View.VISIBLE);
+        mIvClose.setVisibility(View.VISIBLE);
+        mIvMenuOption.setVisibility(View.VISIBLE);
         mIvParticipant.setVisibility(View.VISIBLE);
+        mIvLogUploadButton.setVisibility(View.GONE);
+        mControlPanelContainer.setBackgroundResource(R.drawable.meeting_controls_panel_bg);
     }
 
     private void showOutOfMeetingView() {
@@ -606,11 +692,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mViewPager.setCurrentItem(0);
         mTabLayout.setVisibility(View.GONE);
         mTvProgressMsg.setVisibility(View.GONE);
-        mInMeetingControls.setVisibility(View.GONE);
+        mIvClose.setVisibility(View.GONE);
+        mIvMenuOption.setVisibility(View.GONE);
         mJoinLayout.setVisibility(View.VISIBLE);
         mIvParticipant.setVisibility(View.GONE);
         mIvScreenShare.setVisibility(View.GONE);
         mAppVersion.setVisibility(View.VISIBLE);
+        mIvLogUploadButton.setVisibility(View.VISIBLE);
+        mControlPanelContainer.setBackgroundResource(0);
         if (mBottomSheetFragment != null && mBottomSheetFragment.isAdded()) {
             mBottomSheetFragment.dismiss();
         }
@@ -621,6 +710,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
             }
         }
+        closeCameraSettings();
         if (mAudioDialog != null && mAudioDialog.isShowing()) {
             mAudioDialog.dismiss();
         }
@@ -650,6 +740,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void toggleVideoMuteUnMuteView(boolean isMuted) {
         int resID = isMuted ? R.drawable.videocam_off_black : R.drawable.videocam_on_black;
         mIvVideo.setImageResource(resID);
+        if (isMuted) {
+            closeCameraSettings();
+            mCameraSettings.setVisibility(View.GONE);
+        } else {
+            mCameraSettings.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    private void closeCameraSettings() {
+        mZoomScaleFactor = 1;
+        if (mCameraSettingsDialog != null && mCameraSettingsDialog.isShowing()) {
+            mCameraSettingsDialog.dismiss();
+        }
     }
 
     private void configurePortraitView() {
@@ -713,7 +816,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void showVideoLayoutView(String videoLayoutName) {
                     updateCurrentVideoLayoutForAlertDialog(videoLayoutName);
-                    showVideoLayoutDialog(videoLayoutName);
+                    showVideoLayoutDialog();
                 }
 
                 @Override
@@ -735,7 +838,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return videoLayoutList;
     }
 
-    private void showVideoLayoutDialog(String videoLayoutName) {
+    private void showVideoLayoutDialog() {
         mVideoLayoutDialog = new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.video_layouts))
                 .setAdapter(mVideoLayoutAdapter,
@@ -815,6 +918,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void selectVideoDevice(int position) {
         mVideoDeviceAdapter.updateSelectedPosition(position);
         VideoDevice videoDevice = mVideoDeviceAdapter.getItem(position);
+        closeCameraSettings();
         mVideoDeviceService.selectVideoDevice(videoDevice);
     }
 
@@ -832,13 +936,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showCameraSettingsDialog() {
-        final AlertDialog.Builder cameraSettingDialog = new AlertDialog.Builder(this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final SeekBar seek = new SeekBar(this);
         seek.setMax(10);
         seek.setMin(1);
         seek.setProgress(mZoomScaleFactor);
-        cameraSettingDialog.setTitle(getString(R.string.camera_setting_title));
-        cameraSettingDialog.setView(seek);
+        builder.setTitle(getString(R.string.camera_setting_title));
+        builder.setView(seek);
         try {
             CameraCharacteristics cameraCharacteristics = getCurrentCameraCharacteristics();
             seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -864,8 +968,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-        cameraSettingDialog.create();
-        cameraSettingDialog.show();
+        mCameraSettingsDialog = builder.create();
+        mCameraSettingsDialog.show();
     }
 
     /**
@@ -892,7 +996,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
             return cameraManager.getCameraCharacteristics(cameraId);
         } else {
-            throw new IllegalStateException("No active camera device.");
+            Log.e(TAG, "No active camera device");
+            throw new CameraAccessException(CameraAccessException.CAMERA_ERROR);
         }
     }
 }

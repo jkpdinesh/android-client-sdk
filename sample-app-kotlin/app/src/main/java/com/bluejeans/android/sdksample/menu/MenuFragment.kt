@@ -35,7 +35,7 @@ class MenuFragment(private val menuCallBack: IMenuCallback) : BottomSheetDialogF
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         menuFragmentBinding = FragmentOptionMenuDialogBinding.inflate(inflater, container, false)
         return menuFragmentBinding!!.root
     }
@@ -81,9 +81,9 @@ class MenuFragment(private val menuCallBack: IMenuCallback) : BottomSheetDialogF
 
     private fun updateView() {
         menuFragmentBinding?.let {
-            it.mbVideoLayout?.text = videoLayout
-            it.mbAudioDevice?.text = currentAudioDevice
-            it.mbVideoDevice?.text = currentVideoDevice
+            it.mbVideoLayout.text = videoLayout
+            it.mbAudioDevice.text = currentAudioDevice
+            it.mbVideoDevice.text = currentVideoDevice
         }
     }
 }

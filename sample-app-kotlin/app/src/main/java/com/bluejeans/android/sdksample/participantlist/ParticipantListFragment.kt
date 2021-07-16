@@ -32,8 +32,6 @@ const val EVERYONE = "Everyone"
 
 class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItemListener {
 
-    private val TAG = "ParticipantListFragment"
-
     sealed class FragmentView {
         object CHAT_PARTICIPANTS : FragmentView()
         object PARTICIPANT_LIST : FragmentView()
@@ -45,7 +43,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
     private lateinit var participantsViewBinding: FragmentParticipantViewBinding
     private var chatDisposable: CompositeDisposable? = null
     private var participantDisposable: CompositeDisposable? = null
-    var countDisposable = CompositeDisposable()
+    private var countDisposable = CompositeDisposable()
     private var selectedView: FragmentView = FragmentView.PARTICIPANT_LIST
     private var totalCount = 0
     private var publicChatService: PublicChatService? = null
@@ -127,6 +125,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
             .addToBackStack("ParticipantChat")
             .commit()
         participantsViewBinding.ivChatBubble.gone()
+        participantsViewBinding.ivPeople.gone()
         participantsViewBinding.closeRoster.setImageResource(R.drawable.ic_back_icon)
         selectedView = FragmentView.CHAT_VIEW
     }
@@ -160,7 +159,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
                 totalCount = c
                 handleUnreadCountDisplay()
             }) { err: Throwable? ->
-                Log.e(TAG, "Unable to get total msg count")
+                Log.e(TAG, "Unable to get total msg count ${err?.message}")
             })
         } else {
             Log.e(
@@ -183,7 +182,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
     }
 
     private fun addClickListeners() {
-        participantsViewBinding.closeRoster.setOnClickListener { v: View ->
+        participantsViewBinding.closeRoster.setOnClickListener {
             if (selectedView == FragmentView.CHAT_VIEW) {
                 handleChatViewBack()
             } else {
@@ -191,28 +190,33 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
             }
         }
         participantsViewBinding.ivChatBubble.setOnClickListener { v: View ->
-            if (publicChatService != null && selectedView != FragmentView.CHAT_PARTICIPANTS && selectedView != FragmentView.CHAT_VIEW) {
-                if (chatDisposable == null || chatDisposable?.isDisposed() == true) {
+            if (publicChatService != null && selectedView == FragmentView.PARTICIPANT_LIST) {
+                if (chatDisposable == null || chatDisposable?.isDisposed == true) {
                     chatDisposable = CompositeDisposable()
                 }
                 selectedView = FragmentView.CHAT_PARTICIPANTS
                 loadChatAdapter()
-                setTitle("Chat People")
-                participantsViewBinding.ivChatBubble.setImageResource(R.drawable.people_icon)
+                setTitle(getString(R.string.chat))
+                participantsViewBinding.ivChatBubble.gone()
+                participantsViewBinding.ivPeople.visible()
                 participantsViewBinding.tvUnreadChatCount.gone()
                 totalCount = 0
                 handleUnreadCountDisplay()
-            } else if (selectedView == FragmentView.CHAT_PARTICIPANTS && publicChatService == null) {
+            } else if (selectedView != FragmentView.CHAT_PARTICIPANTS && publicChatService == null) {
                 Toast.makeText(context, "Chat Unavailable", Toast.LENGTH_SHORT).show()
-            } else {
-                chatDisposable?.dispose()
-                selectedView = FragmentView.PARTICIPANT_LIST
-                loadParticipantListAdapter()
-                setTitle("People")
-                participantsViewBinding.ivChatBubble.setImageResource(R.drawable.ic_chat_bar)
-                participantsViewBinding.tvUnreadChatCount.visible()
             }
         }
+
+        participantsViewBinding.ivPeople.setOnClickListener {
+            chatDisposable?.dispose()
+            selectedView = FragmentView.PARTICIPANT_LIST
+            loadParticipantListAdapter()
+            setTitle(getString(R.string.people))
+            participantsViewBinding.ivChatBubble.visible()
+            participantsViewBinding.ivPeople.gone()
+            participantsViewBinding.tvUnreadChatCount.visible()
+        }
+
     }
 
     private fun loadChatAdapter() {
@@ -225,10 +229,8 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
                     // removing self
                     participantListAdapter?.updateMeetingList(list)
                 }
-                Unit
             }) { err: Throwable? ->
-                Log.e(TAG, "Unable to subsribe to private chat service")
-                Unit
+                Log.e(TAG, "Unable to subscribe to private chat service ${err?.message}")
             })
         } else {
             Log.i(TAG, "Private chat is null")
@@ -239,13 +241,13 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
     private fun handleChatViewBack() {
         childFragmentManager.popBackStack()
         with(participantsViewBinding) {
-            ivChatBubble.visible()
-            ivChatBubble.setImageResource(R.drawable.people_icon)
+            ivChatBubble.gone()
+            ivPeople.visible()
             tvUnreadChatCount.gone()
             rvRosterParticipants.visible()
             closeRoster.setImageResource(R.drawable.ic_close_dark_blue)
         }
-        setTitle("Chat People")
+        setTitle(getString(R.string.chat))
         val imm = activity?.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(this.view?.windowToken, 0)
         selectedView = FragmentView.CHAT_PARTICIPANTS
@@ -265,7 +267,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
                 publicChatService = null
             }
         }) { err: Throwable? ->
-            Log.e(TAG, "Unable to subscribe for public chat service")
+            Log.e(TAG, "Unable to subscribe for public chat service ${err?.message}")
         })
         participantDisposable?.add(meetingService.privateChatService.chatServiceState.subscribeOnUI(
             { obj: MeetingService.MeetingChatServiceStatus? ->
@@ -276,7 +278,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
                     privateChatService = null
                 }
             }) { err: Throwable? ->
-            Log.e(TAG, "Unable to subscribe for private chat service")
+            Log.e(TAG, "Unable to subscribe for private chat service ${err?.message}")
         })
     }
 
@@ -293,7 +295,7 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
                     }
                 }
             ) { err: Throwable? ->
-                Log.e(TAG, "Error subscribing to public chat count")
+                Log.e(TAG, "Error subscribing to public chat count ${err?.message}")
                 unreadCount.visibility = View.GONE
             })
         }
@@ -316,15 +318,19 @@ class ParticipantListFragment : BottomSheetDialogFragment(), ParticipantChatItem
                                 unreadCount.visibility = View.GONE
                             }
                         }) { err: Throwable? ->
-                            Log.e(TAG, "Error subscribing to private chat count")
+                            Log.e(TAG, "Error subscribing to private chat count ${err?.message}")
                             unreadCount.visibility = View.GONE
                         })
                     }
                 }
             ) { err: Throwable? ->
-                Log.e(TAG, "Error subscribing to private chat participant count map")
+                Log.e(TAG, "Error subscribing to private chat participant count map ${err?.message}")
                 unreadCount.visibility = View.GONE
             })
         }
+    }
+
+    companion object {
+        private const val TAG = "ParticipantListFragment"
     }
 }

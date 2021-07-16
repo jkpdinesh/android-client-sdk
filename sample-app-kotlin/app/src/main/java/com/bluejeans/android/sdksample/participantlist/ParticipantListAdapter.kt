@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bluejeans.android.sdksample.databinding.LayoutParticipantItemBinding
 import com.bluejeans.android.sdksample.participantlist.ParticipantListAdapter.RosterViewHolder
 import com.bluejeans.bluejeanssdk.meeting.ParticipantsService
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 class ParticipantListAdapter constructor(
     private val isForChat: Boolean = false,
@@ -18,7 +17,7 @@ class ParticipantListAdapter constructor(
 ) : RecyclerView.Adapter<RosterViewHolder>() {
     private val participantList = ArrayList<ParticipantsService.Participant>()
     private var everyone = ParticipantsService.Participant(EVERYONE)
-    private var disposable = CompositeDisposable()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RosterViewHolder {
         val itemViewBinding = LayoutParticipantItemBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -37,13 +36,16 @@ class ParticipantListAdapter constructor(
 
     fun updateMeetingList(participantsList: List<ParticipantsService.Participant>) {
         participantList.clear()
-        disposable.dispose()
-        disposable = CompositeDisposable()
         if (isForChat && !participantsList.contains(everyone)) {
             this.participantList.add(everyone)
         }
         this.participantList.addAll(participantsList)
-        if (isForChat) {
+        /*
+          If you are the only participant in the meeting, will not be shown in the people
+          chat list.By default 'Every one' is added in the chat list which is basically
+          public chat list item.
+         */
+        if (isForChat && participantList.size >= 2) {
             // remove self participant
             participantList.removeAt(1)
         }
@@ -54,26 +56,26 @@ class ParticipantListAdapter constructor(
         RecyclerView.ViewHolder(bindingView.root) {
         fun bind(participant: ParticipantsService.Participant) {
             if (participant.id == EVERYONE) {
-                bindingView.tvParticipantName.setText(EVERYONE)
+                bindingView.tvParticipantName.text = EVERYONE
             } else {
-                bindingView.tvParticipantName.setText(participant.name)
+                bindingView.tvParticipantName.text = participant.name
             }
             bindingView.ivRosterAudioStatus.isSelected = participant.isAudioMuted
             bindingView.ivRosterVideoStatus.isSelected = participant.isVideoMuted
             if (isForChat) {
-                bindingView.ivRosterAudioStatus.setVisibility(View.GONE)
-                bindingView.ivRosterVideoStatus.setVisibility(View.GONE)
-                bindingView.ivPrivateChat.setVisibility(View.VISIBLE)
+                bindingView.ivRosterAudioStatus.visibility = View.GONE
+                bindingView.ivRosterVideoStatus.visibility = View.GONE
+                bindingView.ivPrivateChat.visibility = View.VISIBLE
                 chatItemListener?.onMessageCountChange(participant, bindingView.tvUnreadCount)
-                bindingView.ivPrivateChat.setOnClickListener { v: View ->
+                bindingView.ivPrivateChat.setOnClickListener {
                     chatItemListener?.onParticipantClick(
                         participant
                     )
                 }
             } else {
-                bindingView.ivRosterAudioStatus.setVisibility(View.VISIBLE)
-                bindingView.ivRosterVideoStatus.setVisibility(View.VISIBLE)
-                bindingView.ivPrivateChat.setVisibility(View.GONE)
+                bindingView.ivRosterAudioStatus.visibility = View.VISIBLE
+                bindingView.ivRosterVideoStatus.visibility = View.VISIBLE
+                bindingView.ivPrivateChat.visibility = View.GONE
             }
         }
     }

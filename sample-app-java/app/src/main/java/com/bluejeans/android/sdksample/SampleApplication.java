@@ -30,7 +30,7 @@ public class SampleApplication extends Application {
         try {
             blueJeansSDK = new BlueJeansSDK(new BlueJeansSDKInitParams(this));
         } catch (Exception ex) {
-            throw ex;
+            Log.e(TAG, "Exception while initiating sdk " + ex.getMessage());
         }
     }
 

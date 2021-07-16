@@ -25,12 +25,12 @@ class MenuItemAdapter<T>(
         var checkedTextView: CheckedTextView = view.findViewById(android.R.id.text1)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var newView = convertView
         val viewHolder: ViewHolder
         if (newView == null) {
-            val inflater =
-                context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val inflater = LayoutInflater.from(context)
             newView = inflater.inflate(itemLayoutId, parent, false)
             viewHolder = ViewHolder(newView)
             newView.tag = viewHolder

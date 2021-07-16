@@ -29,6 +29,8 @@ import com.bluejeans.bluejeanssdk.meeting.ParticipantsService;
 import com.bluejeans.bluejeanssdk.meeting.chat.PrivateChatService;
 import com.bluejeans.bluejeanssdk.meeting.chat.PublicChatService;
 
+import java.util.Objects;
+
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import kotlin.Unit;
 
@@ -45,7 +47,7 @@ public class ChatParticipantFragment extends Fragment {
     private EditText msgEditText;
     private PublicChatService publicChatService;
     private PrivateChatService privateChatService;
-    private DiffUtil.ItemCallback<ChatMessage> callback = new DiffUtil.ItemCallback<ChatMessage>() {
+    private final DiffUtil.ItemCallback<ChatMessage> callback = new DiffUtil.ItemCallback<ChatMessage>() {
 
         @Override
         public boolean areItemsTheSame(@NonNull ChatMessage oldItem, @NonNull ChatMessage newItem) {
@@ -159,7 +161,7 @@ public class ChatParticipantFragment extends Fragment {
                 adapter.updateMessages(publicChatService.getChatHistory().getValue());
             }
         } else {
-            if (privateChatService.getChatHistoryByParticipant().getValue().containsKey(remoteParticipant)) {
+            if (Objects.requireNonNull(privateChatService.getChatHistoryByParticipant().getValue()).containsKey(remoteParticipant)) {
                 if (privateChatService.getChatHistoryByParticipant().getValue() != null && privateChatService.getChatHistoryByParticipant().getValue().get(remoteParticipant).getValue() != null) {
                     adapter.updateMessages(privateChatService.getChatHistoryByParticipant().getValue().get(remoteParticipant).getValue());
                 }

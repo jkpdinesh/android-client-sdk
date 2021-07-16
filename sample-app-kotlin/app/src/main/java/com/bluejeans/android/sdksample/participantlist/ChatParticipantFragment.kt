@@ -25,7 +25,6 @@ import java.util.ArrayList
 
 class ChatParticipantFragment private constructor() : Fragment() {
 
-    private val TAG = "ChatParticipantFragment"
     private lateinit var remoteParticipant: ParticipantsService.Participant
     private var disposable: CompositeDisposable? = null
     private var adapter: ChatMessagesAdapter? = null
@@ -76,7 +75,7 @@ class ChatParticipantFragment private constructor() : Fragment() {
                 }
             }
             ) { err: Throwable? ->
-                Log.e(TAG, "Unable to subscribe for public chat service")
+                Log.e(TAG, "Unable to subscribe for public chat service ${err?.message}")
             })
         } else {
             disposable?.add(meetingService.privateChatService.chatServiceState.subscribeOnUI({ state: MeetingService.MeetingChatServiceStatus? ->
@@ -92,20 +91,20 @@ class ChatParticipantFragment private constructor() : Fragment() {
                 }
             }
             ) { err: Throwable? ->
-                Log.e(TAG, "Unable to subscribe for private chat service")
+                Log.e(TAG, "Unable to subscribe for private chat service ${err?.message}")
             })
         }
     }
 
     private fun addSendMessageListener() {
-        chatParticipantBinding.ivSendMsg.setOnClickListener { v: View? ->
+        chatParticipantBinding.ivSendMsg.setOnClickListener {
             val message = chatParticipantBinding.etMessage.text.toString()
             if (remoteParticipant.id == EVERYONE) {
                 if (publicChatService != null &&
-                    publicChatService?.chatServiceState?.value ===
+                    publicChatService?.chatServiceState?.value ==
                     MeetingService.MeetingChatServiceStatus.Active
                 ) {
-                    if (!message.isEmpty()) {
+                    if (message.isNotEmpty()) {
                         publicChatService?.sendMessage(message)
                         chatParticipantBinding.etMessage.setText("")
                     }
@@ -118,10 +117,10 @@ class ChatParticipantFragment private constructor() : Fragment() {
                 }
             } else {
                 if (privateChatService != null &&
-                    privateChatService?.chatServiceState?.value ===
+                    privateChatService?.chatServiceState?.value ==
                     MeetingService.MeetingChatServiceStatus.Active
                 ) {
-                    if (!message.isEmpty()) {
+                    if (message.isNotEmpty()) {
                         privateChatService?.sendMessage(message, remoteParticipant)
                         chatParticipantBinding.etMessage.setText("")
                     }
@@ -176,7 +175,7 @@ class ChatParticipantFragment private constructor() : Fragment() {
             }
         }
         ) { err: Throwable? ->
-            Log.e(TAG, "Unable to subscribe to public chat history")
+            Log.e(TAG, "Unable to subscribe to public chat history ${err?.message}")
         })
     }
 
@@ -197,12 +196,12 @@ class ChatParticipantFragment private constructor() : Fragment() {
                             }
                         }
                     ) { err: Throwable? ->
-                        Log.e(TAG, "Unable to subscribe to private chat history")
+                        Log.e(TAG, "Unable to subscribe to private chat history ${err?.message}")
                     })
                 }
             }
         ) { err: Throwable? ->
-            Log.e(TAG, "Unable to subscribe to private chat history")
+            Log.e(TAG, "Unable to subscribe to private chat history ${err?.message}")
         })
     }
 
@@ -220,5 +219,7 @@ class ChatParticipantFragment private constructor() : Fragment() {
             fragment.remoteParticipant = participant
             return fragment
         }
+
+        private const val TAG = "ChatParticipantFragment"
     }
 }

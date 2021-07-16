@@ -11,9 +11,9 @@ android {
         applicationId "com.bluejeans.android.sdksample"
         minSdkVersion 26
         targetSdkVersion 29
-        versionCode 6
+        versionCode 7
         multiDexEnabled true
-        versionName "1.0.0-alpha.6"
+        versionName  "1.0.0-beta.1"
     }
 
     buildTypes {
@@ -47,8 +47,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation "androidx.viewpager2:viewpager2:1.0.0"
-    implementation "androidx.viewpager2:viewpager2:1.0.0"
 
     //SDK
-    implementation "com.bluejeans:sdk-android:1.0.0-alpha.6"
+    implementation "com.bluejeans:sdk-android:1.0.0-beta.1"
 }

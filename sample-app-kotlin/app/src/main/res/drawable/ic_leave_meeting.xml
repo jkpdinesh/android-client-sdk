@@ -1,0 +1,27 @@
+<!--
+  - Copyright (c) 2020. Blue Jeans Network, Inc. All rights reserved.
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56">
+  <path
+      android:pathData="M28,54c13.256,0 24.195,-9.92 25.798,-22.742C53.93,30.191 54,29.103 54,28 54,13.64 42.36,2 28,2S2,13.64 2,28s11.64,26 26,26z"
+      android:fillColor="#000"
+      android:fillType="evenOdd"/>
+  <path
+      android:pathData="M28,54c13.256,0 24.195,-9.92 25.798,-22.742C53.93,30.191 54,29.103 54,28 54,13.64 42.36,2 28,2S2,13.64 2,28s11.64,26 26,26z"
+      android:fillColor="#DE3163"
+      android:fillType="evenOdd"/>
+  <path
+      android:pathData="M33.227,31.224l2.156,1.367c0.697,0.443 1.653,0.246 2.14,-0.446l1.142,-1.626c0.484,-0.689 0.447,-1.777 -0.135,-2.367 0,0 -2.295,-4.24 -10.694,-4.15 -8.398,0.089 -10.384,4.323 -10.384,4.323 -0.565,0.601 -0.604,1.634 -0.096,2.296l1.106,1.742c0.512,0.666 1.482,0.838 2.172,0.38l1.86,-1.235c0.343,-0.25 0.606,-0.585 0.738,-1.002l0.71,-1.921c1.264,-0.335 2.579,-0.432 3.894,-0.433 1.368,0 2.657,0.123 3.92,0.456l0.735,1.67c0.158,0.39 0.42,0.723 0.736,0.946z"
+      android:strokeLineJoin="round"
+      android:strokeWidth="2"
+      android:fillColor="#00000000"
+      android:strokeColor="#FFF"
+      android:fillType="evenOdd"
+      android:strokeLineCap="round"/>
+</vector>
+

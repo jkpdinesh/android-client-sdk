@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bjnclientcore.inmeeting.chat.model.ChatMessage
-import com.bjnclientcore.inmeeting.chat.model.Sender
 import com.bjnclientcore.ui.util.extensions.visible
 import com.bluejeans.android.sdksample.R
 
@@ -43,7 +42,7 @@ class ChatMessagesAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (chatMessages.get(position).sentBySelf) {
+        return if (chatMessages[position].sentBySelf) {
             0
         } else 1
     }

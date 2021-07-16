@@ -6,6 +6,7 @@ package com.bluejeans.android.sdksample.participantlist;
 import static com.bluejeans.android.sdksample.participantlist.ParticipantListFragment.EVERYONE;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,16 +22,12 @@ import com.bluejeans.bluejeanssdk.meeting.ParticipantsService;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
-
 public class ParticipantListAdapter extends RecyclerView.Adapter<ParticipantListAdapter.participantViewHolder> {
-    private String TAG = "ParticipantListAdapter";
-    private ArrayList<ParticipantsService.Participant> participantList = new ArrayList();
-    private Context mContext;
+    private final ArrayList<ParticipantsService.Participant> participantList = new ArrayList<>();
+    private final Context mContext;
     private ParticipantsService.Participant everyone = null;
     private boolean isForChat = false;
     private ParticipantChatItemListener chatItemListener;
-    private CompositeDisposable disposable = new CompositeDisposable();
 
     public ParticipantListAdapter(Context context) {
         mContext = context;
@@ -61,15 +58,20 @@ public class ParticipantListAdapter extends RecyclerView.Adapter<ParticipantList
     }
 
     public void updateMeetingList(List<ParticipantsService.Participant> participantList) {
+        String TAG = "ParticipantListAdapter";
+        Log.d(TAG, "updateMeetingList participantList " + participantList.size());
         this.participantList.clear();
-        this.disposable.dispose();
-        disposable = new CompositeDisposable();
         if (isForChat && !participantList.contains(everyone)) {
             everyone = new ParticipantsService.Participant(EVERYONE);
             this.participantList.add(everyone);
         }
         this.participantList.addAll(participantList);
-        if (isForChat) {
+         /*
+           If you are the only participant in the meeting, will not be shown in the people
+           chat list.By default 'Every one' is added in the chat list which is basically
+           public chat list item.
+         */
+        if (isForChat && this.participantList.size() >= 2) {
             // remove self participant
             this.participantList.remove(1);
         }
@@ -107,9 +109,7 @@ public class ParticipantListAdapter extends RecyclerView.Adapter<ParticipantList
                 mVideoState.setVisibility(View.GONE);
                 mChatArrow.setVisibility(View.VISIBLE);
                 chatItemListener.onMessageCountChange(participant, mUnreadCount);
-                mChatArrow.setOnClickListener(v -> {
-                    chatItemListener.onParticipantClick(participant);
-                });
+                mChatArrow.setOnClickListener(v -> chatItemListener.onParticipantClick(participant));
             } else {
                 mAudioState.setVisibility(View.VISIBLE);
                 mVideoState.setVisibility(View.VISIBLE);

@@ -15,4 +15,20 @@
     <string name="screen_share_notification_message">In Meeting, Content sharing is in progress.</string>
     <string name="meeting_notification_message">In Meeting</string>
     <string name="camera_setting_title">Slide to Zoom</string>
+    <string name="participant">Participants</string>
+    <string name="menu_option">"Menu "</string>
+    <string name="end_meeting">End Meeting</string>
+    <string name="content_share">Content Share</string>
+    <string name="app_version">App Version</string>
+    <string name="screen_share">Share screen</string>
+    <string name="more_option">More</string>
+    <string name="label_submit">Submit</string>
+    <string name="log_comments">Comments.</string>
+    <string name="upload_logs_success">Logs uploaded successfully.</string>
+    <string name="upload_logs_failure">Upload logs failed, Please try again.</string>
+    <string name="upload_logs">Upload logs</string>
+    <string name="me">Me</string>
+    <string name="send_message">Send a Message</string>
+    <string name="type_message">Type a message</string>
+    <string name="chat">Chat</string>
 </resources>

@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_roster">
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/titleView"
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -14,44 +14,70 @@
 
         <TextView
             android:id="@+id/tvRosterHeading"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_centerInParent="true"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
             android:gravity="center"
             android:text="@string/people"
             android:textColor="@color/black"
-            android:textSize="@dimen/_24dp" />
+            android:textSize="@dimen/_24sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
         <ImageView
             android:id="@+id/ivChatBubble"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/_48dp"
+            android:layout_height="@dimen/_48dp"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             android:layout_marginEnd="@dimen/_8dp"
-            android:src="@drawable/ic_chat_bar" />
+            android:padding="@dimen/_8dp"
+            android:src="@drawable/ic_chat"
+            android:contentDescription="@string/chat"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/ivPeople"
+            android:layout_width="@dimen/_48dp"
+            android:layout_height="@dimen/_48dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/people_icon"
+            android:visibility="gone"
+            android:contentDescription="@string/people"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvUnreadChatCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             android:layout_marginEnd="@dimen/_8dp"
-            android:padding="@dimen/_6dp"
             android:textColor="@color/red"
-            android:textSize="10dp"
-            android:textStyle="bold" />
+            android:textSize="@dimen/_10sp"
+            android:paddingStart="@dimen/_8dp"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp"
+            android:text="20"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/ivChatBubble"
+            app:layout_constraintStart_toStartOf="@+id/ivChatBubble" />
 
         <ImageView
             android:id="@+id/closeRoster"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
             android:layout_marginStart="@dimen/_8dp"
-            android:src="@drawable/ic_close_dark_blue" />
+            android:src="@drawable/ic_close_dark_blue"
+            android:contentDescription="@string/people"
+            app:layout_constraintBottom_toBottomOf="@+id/tvRosterHeading"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvRosterHeading" />
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/chatFragHolder"

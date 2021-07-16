@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
+    <color name="black">#8C000000</color>
     <color name="white">#ffffff</color>
     <color name="red">#FF001E</color>
     <color name="blue">#077AEC</color>
@@ -11,6 +11,13 @@
     <color name="roster_endColor">#e4f1f9</color>
 
     <color name="title_bar_color">#CCF8FBFC</color>
-    <color name="peopleLayoutMoreText">#99000000</color>
-    <color name="appVersionText">#99000000</color>
+    <color name="people_layout_more_text">#99000000</color>
+    <color name="app_version_text">#99000000</color>
+    <color name="icon_color">#48505c</color>
+
+    <!-- Chat -->
+    <color name="white_edit_text_color">#4a4a4a</color>
+    <color name="blue_back_ground_text_color">#ffffff</color>
+    <color name="chat_blue">#0f62c5</color>
+
 </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parent_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -21,10 +20,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="5dp"
+        android:layout_marginBottom="2dp"
         android:background="@color/transparent"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/imgClose"
+        app:layout_constraintBottom_toTopOf="@id/control_panel_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:tabBackground="@drawable/tab_selector"
@@ -42,66 +41,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/joinInfo" />
 
-    <ImageView
-        android:id="@+id/imgRoster"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="@dimen/_20dp"
-        android:layout_marginEnd="@dimen/_20dp"
-        android:src="@drawable/people_icon"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintEnd_toStartOf="@+id/imgScreenShare" />
-
-    <ImageView
-        android:id="@+id/imgScreenShare"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginBottom="@dimen/_20dp"
-        android:layout_marginEnd="@dimen/_20dp"
-        android:src="@drawable/screen_share_state"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/imgRoster"
-        app:layout_constraintEnd_toStartOf="@+id/imgMenuOption"
-        app:layout_constraintHorizontal_chainStyle="packed" />
-
-    <ImageView
-        android:id="@+id/imgMenuOption"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/_20dp"
-        android:src="@mipmap/ic_more_menu"
-        android:layout_marginEnd="@dimen/_20dp"
-        app:layout_constraintEnd_toStartOf="@+id/imgClose"
-        app:layout_constraintStart_toEndOf="@+id/imgScreenShare"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_chainStyle="packed" />
-
-    <ImageView
-        android:id="@+id/imgClose"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@mipmap/ic_leave_meeting"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imgMenuOption"
-        app:layout_constraintBottom_toBottomOf="@+id/imgMenuOption"
-        app:layout_constraintTop_toTopOf="@+id/imgMenuOption" />
-
     <TextView
         android:id="@+id/tvAppVersion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/dimen_8"
-        android:text="App Version"
-        android:textColor="@color/appVersionText"
+        android:text="@string/app_version"
+        android:textColor="@color/app_version_text"
+        android:layout_marginBottom="@dimen/dimen_16"
         android:textSize="@dimen/dimen_14"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgUploadLogs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="40dp"
+        android:layout_marginBottom="@dimen/dimen_16"
+        android:baselineAlignBottom="true"
+        android:scaleType="center"
+        android:contentDescription="@string/upload_logs"
+        android:src="@drawable/ic_cloud_upload"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 
     <include
         android:id="@id/selfView"
@@ -125,13 +88,73 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/optionGroup"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/control_panel_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:constraint_referenced_ids="imgMenuOption,imgClose"
-        tools:visibility="visible" />
+        android:background="@drawable/meeting_controls_panel_bg"
+        android:minHeight="80dp"
+        android:paddingBottom="@dimen/dimen_10"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:id="@+id/imgRoster"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:padding="@dimen/_4dp"
+            android:background="@drawable/bg_circle_white_without_boarder"
+            android:contentDescription="@string/people"
+            android:src="@drawable/people_icon"
+            app:layout_constraintBaseline_toBaselineOf="@+id/imgMenuOption"
+            app:layout_constraintEnd_toStartOf="@+id/imgScreenShare"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageView
+            android:id="@+id/imgScreenShare"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/screen_share"
+            android:src="@drawable/screen_share_state"
+            app:layout_constraintBaseline_toBaselineOf="@+id/imgRoster"
+            app:layout_constraintEnd_toStartOf="@+id/imgMenuOption"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@id/imgRoster" />
+
+        <ImageView
+            android:id="@+id/imgMenuOption"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/more_option"
+            android:padding="8dp"
+            android:background="@drawable/bg_circle_white_without_boarder"
+            android:src="@drawable/ic_more_option"
+            app:layout_constraintBaseline_toBaselineOf="@+id/imgClose"
+            app:layout_constraintEnd_toStartOf="@+id/imgClose"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@+id/imgScreenShare" />
+
+        <ImageView
+            android:id="@+id/imgClose"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/end_meeting"
+            android:src="@drawable/ic_leave_meeting"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/imgMenuOption"
+            app:layout_constraintTop_toTopOf="@+id/imgMenuOption"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/controller_flow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="imgRoster,imgScreenShare,imgMenuOption,imgClose"
+            app:flow_horizontalGap="25dp"
+            app:flow_horizontalStyle="packed"
+            app:flow_wrapMode="chain"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout
         android:id="@+id/rosterContainer"
@@ -141,4 +164,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

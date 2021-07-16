@@ -13,12 +13,17 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
+import android.text.Editable
 import android.text.TextUtils
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckedTextView
+import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,6 +59,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val permissionService = SampleApplication.blueJeansSDK.permissionService
     private val meetingService = SampleApplication.blueJeansSDK.meetingService
     private val videoDeviceService = SampleApplication.blueJeansSDK.videoDeviceService
+    private val loggingService = SampleApplication.blueJeansSDK.loggingService
     private val appVersionString = "v" + SampleApplication.blueJeansSDK.version
     private val disposable = CompositeDisposable()
     private lateinit var videoState: MeetingService.VideoState
@@ -67,7 +73,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var audioDeviceDialog: AlertDialog? = null
     private var videoDeviceDialog: AlertDialog? = null
     private var videoLayoutDialog: AlertDialog? = null
-
+    private var cameraSettingsDialog: AlertDialog? = null
+    private var uploadLogsDialog: AlertDialog? = null
+    private var progressBar: ProgressBar? = null
 
     private lateinit var binding: ActivityMainBinding
     private var zoomScaleFactor = 1 // default value of 1, no zoom to start with
@@ -147,6 +155,67 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
             }
             R.id.ivCameraSettings -> showCameraSettingsDialog()
+            R.id.imgUploadLogs -> showUploadLogsDialog()
+        }
+    }
+
+    private fun showUploadLogsDialog() {
+        uploadLogsDialog = AlertDialog.Builder(this)
+            .setView(R.layout.submit_log_dialog).create()
+        uploadLogsDialog?.setCanceledOnTouchOutside(true)
+        uploadLogsDialog?.show()
+        val editText = uploadLogsDialog?.findViewById<EditText>(R.id.description)
+        val submitButton = uploadLogsDialog?.findViewById<Button>(R.id.btn_submit)
+        progressBar = uploadLogsDialog?.findViewById(R.id.progressBar)
+        editText?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                submitButton?.isEnabled = s.toString().trim().isNotEmpty()
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+
+            }
+        })
+        submitButton?.setOnClickListener {
+            val description = editText?.text.toString()
+            submitButton.isEnabled = false
+            progressBar?.visible()
+            uploadLogs(description)
+        }
+    }
+
+    private fun uploadLogs(comments: String?) {
+        if (!comments.isNullOrEmpty()) {
+            disposable.add(
+                loggingService.uploadLog(comments, userName)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        {
+                            Log.i(TAG, "Log uploaded successfully $it")
+                            Toast.makeText(
+                                this, getString(R.string.upload_logs_success),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            uploadLogsDialog?.dismiss()
+                        },
+                        {
+                            Log.e(
+                                TAG,
+                                "Error while uploading logs ${it.message}"
+                            )
+                            progressBar?.gone()
+                            Toast.makeText(
+                                this, getString(R.string.upload_logs_failure),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        })
+            )
+        } else {
+            Toast.makeText(this, "Please enter your comments.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -196,10 +265,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
-                                else -> throw IllegalStateException(
-                                    "Permission state not handled " +
-                                            "$status"
-                                )
                             }
                         }
                     ) {
@@ -242,10 +307,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                        else -> throw IllegalStateException(
-                            "Permission state not handled " +
-                                    "$status"
-                        )
                     }
                 }
             ) { Timber.tag(TAG).e("Error in requesting permissions subscription") })
@@ -309,13 +370,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             { state ->
                 Timber.tag(TAG).i("Meeting state $state")
                 if (state is MeetingService.MeetingState.Connected) {
+                    // add this flag to avoid screen shots.
+                    // This also allows protection of screen during screen casts from 3rd party apps.
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     showInMeetingView()
                 } else if (state is MeetingService.MeetingState.Idle) {
                     endMeeting()
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 }
             }
         ) {
-            Timber.tag(TAG).e("Error in meeting status subscription")
+            Timber.tag(TAG).e("Error in meeting status subscription ${it.message}")
         })
     }
 
@@ -329,12 +394,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
             }
         ) {
-            Timber.tag(TAG).e("Error in meeting status subscription")
+            Timber.tag(TAG).e("Error in video state subscription")
         })
     }
 
     private fun subscribeForRemoteContentState() {
-        disposable.add(meetingService.receivingRemoteContent.subscribeOnUI({ isReceivingRemoteContent ->
+        disposable.add(meetingService.contentShareService.receivingRemoteContent.subscribeOnUI({ isReceivingRemoteContent ->
             if (isReceivingRemoteContent != null) {
                 isRemoteContentAvailable = isReceivingRemoteContent
             }
@@ -347,35 +412,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         })
     }
 
-    private fun subscribeForAudioDevices() {
-        disposable.add(
-            meetingService.audioDeviceService.audioDevices.subscribeOnUI({ audioDevices ->
-                if (audioDevices != null) {
-                    audioDeviceAdapter?.let {
-                        it.clear()
-                        it.addAll(audioDevices)
-                        it.notifyDataSetChanged()
-                    }
-                }
-            }) {
-                Timber.tag(TAG).e("Error in audio devices subscription $it")
-            })
+    private fun subscribeForAudioMuteStatus() {
+        disposable.add(meetingService.audioMuted.subscribe(
+            { isMuted ->
+                // This could be due to local mute or remote mute
+                Timber.tag(TAG).i(" Audio Mute state $isMuted")
+                isMuted?.let { toggleAudioMuteUnMuteView(it) }
+            }
+        ) {
+            Timber.tag(TAG).e("Error in audio mute subscription")
+        })
     }
 
-    private fun subscribeForVideoDevices() {
-        disposable.add(
-            videoDeviceService.videoDevices.subscribeOnUI({ videoDevices ->
-                if (videoDevices != null) {
-                    videoDeviceAdapter?.let {
-                        it.clear()
-                        it.addAll(videoDevices)
-                        it.notifyDataSetChanged()
-                    }
-                }
+    private fun subscribeForVideoMuteStatus() {
+        disposable.add(meetingService.videoMuted.subscribeOnUI(
+            { isMuted ->
+                // This could be due to local mute or remote mute
+                Timber.tag(TAG).i(" Video Mute state $isMuted")
+                isMuted?.let { toggleVideoMuteUnMuteView(it) }
             }
-            ) {
-                Timber.tag(TAG).e("Error in video devices subscription $it")
-            })
+        ) {
+            Timber.tag(TAG).e("Error in video mute subscription")
+        })
     }
 
     private fun subscribeForVideoLayout() {
@@ -408,6 +466,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         })
     }
 
+    private fun subscribeForAudioDevices() {
+        disposable.add(
+            meetingService.audioDeviceService.audioDevices.subscribeOnUI({ audioDevices ->
+                if (audioDevices != null) {
+                    audioDeviceAdapter?.let {
+                        it.clear()
+                        it.addAll(audioDevices)
+                        it.notifyDataSetChanged()
+                    }
+                }
+            }) {
+                Timber.tag(TAG).e("Error in audio devices subscription $it")
+            })
+    }
+
     private fun subscribeForCurrentVideoDevice() {
         disposable.add(videoDeviceService.currentVideoDevice.subscribeOnUI(
             { currentVideoDevice ->
@@ -428,6 +501,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         ) { err ->
             Timber.tag(TAG).e("Error in Participants subscription${err.message}")
+        })
+    }
+
+    private fun subscribeForContentShareAvailability() {
+        disposable.add(meetingService.contentShareService.contentShareAvailability.subscribeOnUI(
+            { contentShareAvailability: ContentShareAvailability? ->
+                if (contentShareAvailability is ContentShareAvailability.Available) {
+                    binding.imgScreenShare.visible()
+                } else {
+                    binding.imgScreenShare.gone()
+                }
+            }
+        ) { err: Throwable ->
+            Log.e(TAG, "Error in content share availability" + err.message)
+            Unit
         })
     }
 
@@ -456,21 +544,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         })
     }
 
-    private fun subscribeForContentShareAvailability() {
-        disposable.add(meetingService.contentShareService.contentShareAvailability.subscribeOnUI(
-            { contentShareAvailability: ContentShareAvailability? ->
-                if (contentShareAvailability is ContentShareAvailability.Available) {
-                    binding.imgScreenShare.visible()
-                } else {
-                    binding.imgScreenShare.gone()
-                }
-            }
-        ) { err: Throwable ->
-            Log.e(TAG, "Error in content share availability" + err.message)
-            Unit
-        })
-    }
-
     private fun subscribeForContentShareEvents() {
         disposable.add(
             meetingService.contentShareService.contentShareEvent
@@ -491,68 +564,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         )
     }
 
-    private fun updateCurrentVideoDeviceForAlertDialog(videoDevice: VideoDevice) {
-        val videoDevices = videoDeviceService.videoDevices.value
-        videoDevices?.let {
-            videoDeviceAdapter?.updateSelectedPosition(it.indexOf(videoDevice))
-        }
-    }
-
-    private fun updateCurrentVideoLayoutForAlertDialog(videoLayoutName: String) {
-        videoLayoutAdapter?.updateSelectedPosition(
-            videoLayoutOptionList().indexOf(videoLayoutName)
-        )
-    }
-
-    private fun updateCurrentAudioDeviceForAlertDialog(currentAudioDevice: AudioDevice) {
-        val audioDevices = meetingService.audioDeviceService.audioDevices.value
-        audioDevices?.let {
-            audioDeviceAdapter!!.updateSelectedPosition(it.indexOf(currentAudioDevice))
-        }
-    }
-
-    private fun getVideoLayoutDisplayName(videoLayout: MeetingService.VideoLayout): String {
-        return when (videoLayout) {
-            MeetingService.VideoLayout.Speaker -> {
-                getString(R.string.speaker_view)
+    private fun subscribeForVideoDevices() {
+        disposable.add(
+            videoDeviceService.videoDevices.subscribeOnUI({ videoDevices ->
+                if (videoDevices != null) {
+                    videoDeviceAdapter?.let {
+                        it.clear()
+                        it.addAll(videoDevices)
+                        it.notifyDataSetChanged()
+                    }
+                }
             }
-            MeetingService.VideoLayout.Gallery -> {
-                getString(R.string.gallery_view)
-            }
-            MeetingService.VideoLayout.People -> {
-                getString(R.string.people_view)
-            }
-        }
-    }
-
-    private fun subscribeForAudioMuteStatus() {
-        disposable.add(meetingService.audioMuted.subscribe(
-            { isMuted ->
-                // This could be due to local mute or remote mute
-                Timber.tag(TAG).i(" Audio Mute state $isMuted")
-                isMuted?.let { toggleAudioMuteUnMuteView(it) }
-            }
-        ) {
-            Timber.tag(TAG).e("Error in meeting status subscription")
-        })
-    }
-
-    private fun subscribeForVideoMuteStatus() {
-        disposable.add(meetingService.videoMuted.subscribe(
-            { isMuted ->
-                // This could be due to local mute or remote mute
-                Timber.tag(TAG).i(" Video Mute state $isMuted")
-                isMuted?.let { toggleVideoMuteUnMuteView(it) }
-            }
-        ) {
-            Timber.tag(TAG).e("Error in meeting status subscription")
-        })
+            ) {
+                Timber.tag(TAG).e("Error in video devices subscription $it")
+            })
     }
 
     private fun initViews() {
         val pagerAdapter = ScreenSlidePagerAdapter(this)
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.registerOnPageChangeCallback(PagerChangeCallback())
+        // we are caching the fragment as when user change layout
+        // if not cached, fragment dimensions are returned null resulting in no layout being displayed
+        // user can also use detatch and attach fragments on page listener inorder to relayout.
+        binding.viewPager.offscreenPageLimit = 1
         TabLayoutMediator(
             binding.tabLayout,
             binding.viewPager
@@ -568,6 +603,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.imgMenuOption.setOnClickListener(this)
         binding.imgRoster.setOnClickListener(this)
         binding.imgScreenShare.setOnClickListener(this)
+        binding.imgUploadLogs.setOnClickListener(this)
 
 
         bottomSheetFragment = MenuFragment(mIOptionMenuCallback)
@@ -578,121 +614,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.tvAppVersion.text = appVersionString
     }
 
-    private fun getAudioDeviceAdapter(audioDevices: List<AudioDevice>) =
-        MenuItemAdapter(
-            this,
-            android.R.layout.select_dialog_singlechoice, audioDevices
-        ) { view, item, _ ->
-            (view as CheckedTextView).text = getAudioDeviceName(item)
-        }
-
-    private fun getVideoLayoutAdapter() =
-        MenuItemAdapter(
-            this, android.R.layout.select_dialog_singlechoice,
-            videoLayoutOptionList()
-        ) { view, item, _ ->
-            (view as CheckedTextView).text = item
-        }
-
-    private fun videoLayoutOptionList(): List<String> {
-        return listOf(
-            getString(R.string.people_view),
-            getString(R.string.speaker_view),
-            getString(R.string.gallery_view)
-        )
-    }
-
-    private fun getVideoDeviceAdapter(videoDevices: List<VideoDevice>) =
-        MenuItemAdapter(
-            this,
-            android.R.layout.select_dialog_singlechoice, videoDevices
-        ) { view, item, _ ->
-            (view as CheckedTextView).text = item.name
-        }
-
-    private val mIOptionMenuCallback = object : MenuFragment.IMenuCallback {
-        override fun showVideoLayoutView(videoLayoutName: String) {
-            updateCurrentVideoLayoutForAlertDialog(videoLayoutName)
-            showVideoLayoutDialog()
-        }
-
-        override fun showAudioDeviceView() {
-            showAudioDeviceDialog()
-        }
-
-        override fun showVideoDeviceView() {
-            showVideoDeviceDialog()
-        }
-    }
-
-    private fun showVideoDeviceDialog() {
-        videoDeviceDialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.video_devices))
-            .setAdapter(videoDeviceAdapter) { _, position -> selectVideoDevice(position) }
-            .create()
-        videoDeviceDialog?.show()
-    }
-
-    private fun showAudioDeviceDialog() {
-        audioDeviceDialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.audio_devices))
-            .setAdapter(audioDeviceAdapter) { _, which -> selectAudioDevice(which) }.create()
-        audioDeviceDialog?.show()
-    }
-
-    private fun selectVideoDevice(position: Int) {
-        videoDeviceAdapter?.updateSelectedPosition(position)
-        videoDeviceAdapter?.getItem(position)?.let {
-            bottomSheetFragment?.updateVideoDevice(it.name)
-            videoDeviceService.selectVideoDevice(it)
-        }
-    }
-
-    private fun showVideoLayoutDialog() {
-        videoLayoutDialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.video_layouts))
-            .setAdapter(videoLayoutAdapter) { _, which -> selectVideoLayout(which) }.create()
-        videoLayoutDialog?.show()
-    }
-
-    private fun selectAudioDevice(position: Int) {
-        audioDeviceAdapter?.updateSelectedPosition(position)
-        audioDeviceAdapter?.getItem(position)?.let {
-            bottomSheetFragment?.updateAudioDevice(getAudioDeviceName(it))
-            meetingService.audioDeviceService.selectAudioDevice(it)
-        }
-    }
-
-    private fun selectVideoLayout(position: Int) {
-        videoLayoutAdapter?.updateSelectedPosition(position)
-        setVideoLayout(videoLayoutAdapter?.getItem(position))
-    }
-
-    private fun hideKeyboard() {
-        val view = this.currentFocus
-        if (view != null) {
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(view.windowToken, 0)
-        }
-    }
-
-    private fun setVideoLayout(videoLayoutName: String?) {
-        val videoLayout = when (videoLayoutName) {
-            getString(R.string.people_view) ->
-                MeetingService.VideoLayout.People
-
-            getString(R.string.gallery_view) ->
-                MeetingService.VideoLayout.Gallery
-
-            getString(R.string.speaker_view) ->
-                MeetingService.VideoLayout.Speaker
-
-            else -> throw IllegalArgumentException("Invalid video layout")
-        }
-        bottomSheetFragment?.updateVideoLayout(videoLayoutName)
-        meetingService.setVideoLayout(videoLayout)
-    }
-
     private fun showJoiningInProgressView() {
         Timber.tag(TAG).i("showJoiningInProgressView")
         binding.tvAppVersion.gone()
@@ -701,6 +622,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.tvProgressMsg.text = getString(R.string.connectingState)
         binding.imgClose.visible()
         binding.imgMenuOption.visible()
+        binding.controlPanelContainer.setBackgroundResource(R.drawable.meeting_controls_panel_bg)
+        binding.imgUploadLogs.gone()
     }
 
     private fun showInMeetingView() {
@@ -713,7 +636,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.imgClose.visible()
         binding.imgMenuOption.visible()
         binding.imgRoster.visible()
-        binding.optionGroup.visible()
+        binding.controlPanelContainer.setBackgroundResource(R.drawable.meeting_controls_panel_bg)
+        binding.imgUploadLogs.gone()
     }
 
     private fun showOutOfMeetingView() {
@@ -728,6 +652,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.joinInfo.joinInfo.visible()
         binding.imgRoster.gone()
         binding.imgScreenShare.gone()
+        binding.controlPanelContainer.setBackgroundResource(0)
+        binding.imgUploadLogs.visible()
         if (bottomSheetFragment?.isAdded == true) with(bottomSheetFragment) { this?.dismiss() }
         if (participantListFragment?.isAdded == true) {
             supportFragmentManager.beginTransaction().remove(participantListFragment!!).commit()
@@ -736,6 +662,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 supportFragmentManager.beginTransaction().remove(fragment).commit()
             }
         }
+        closeCameraSettings()
         if (audioDeviceDialog?.isShowing == true) audioDeviceDialog?.dismiss()
         if (videoDeviceDialog?.isShowing == true) videoDeviceDialog?.dismiss()
         if (videoLayoutDialog?.isShowing == true) videoLayoutDialog?.dismiss()
@@ -760,6 +687,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val resID = if (isMuted) R.drawable.ic_videocam_off_black_24dp
         else R.drawable.ic_videocam_black_24dp
         binding.selfView.ivVideo.setImageResource(resID)
+        if (isMuted) {
+            closeCameraSettings()
+            binding.selfView.ivCameraSettings.gone()
+        } else {
+            binding.selfView.ivCameraSettings.visible()
+        }
+    }
+
+    private fun closeCameraSettings() {
+        zoomScaleFactor = 1
+        if (cameraSettingsDialog?.isShowing == true) {
+            cameraSettingsDialog?.dismiss()
+        }
     }
 
     private fun configurePortraitView() {
@@ -815,6 +755,142 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private val mIOptionMenuCallback = object : MenuFragment.IMenuCallback {
+        override fun showVideoLayoutView(videoLayoutName: String) {
+            updateCurrentVideoLayoutForAlertDialog(videoLayoutName)
+            showVideoLayoutDialog()
+        }
+
+        override fun showAudioDeviceView() {
+            showAudioDeviceDialog()
+        }
+
+        override fun showVideoDeviceView() {
+            showVideoDeviceDialog()
+        }
+    }
+
+    private fun videoLayoutOptionList(): List<String> {
+        return listOf(
+            getString(R.string.people_view),
+            getString(R.string.speaker_view),
+            getString(R.string.gallery_view)
+        )
+    }
+
+    private fun showVideoLayoutDialog() {
+        videoLayoutDialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.video_layouts))
+            .setAdapter(videoLayoutAdapter) { _, which -> selectVideoLayout(which) }.create()
+        videoLayoutDialog?.show()
+    }
+
+    private fun showAudioDeviceDialog() {
+        audioDeviceDialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.audio_devices))
+            .setAdapter(audioDeviceAdapter) { _, which -> selectAudioDevice(which) }.create()
+        audioDeviceDialog?.show()
+    }
+
+    private fun showVideoDeviceDialog() {
+        videoDeviceDialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.video_devices))
+            .setAdapter(videoDeviceAdapter) { _, position -> selectVideoDevice(position) }
+            .create()
+        videoDeviceDialog?.show()
+    }
+
+    private fun updateCurrentVideoDeviceForAlertDialog(videoDevice: VideoDevice) {
+        val videoDevices = videoDeviceService.videoDevices.value
+        videoDevices?.let {
+            videoDeviceAdapter?.updateSelectedPosition(it.indexOf(videoDevice))
+        }
+    }
+
+    private fun updateCurrentAudioDeviceForAlertDialog(currentAudioDevice: AudioDevice) {
+        val audioDevices = meetingService.audioDeviceService.audioDevices.value
+        audioDevices?.let {
+            audioDeviceAdapter!!.updateSelectedPosition(it.indexOf(currentAudioDevice))
+        }
+    }
+
+    private fun updateCurrentVideoLayoutForAlertDialog(videoLayoutName: String) {
+        videoLayoutAdapter?.updateSelectedPosition(
+            videoLayoutOptionList().indexOf(videoLayoutName)
+        )
+    }
+
+    private fun getVideoLayoutAdapter() =
+        MenuItemAdapter(
+            this, android.R.layout.select_dialog_singlechoice,
+            videoLayoutOptionList()
+        ) { view, item, _ ->
+            (view as CheckedTextView).text = item
+        }
+
+    private fun getVideoDeviceAdapter(videoDevices: List<VideoDevice>) =
+        MenuItemAdapter(
+            this,
+            android.R.layout.select_dialog_singlechoice, videoDevices
+        ) { view, item, _ ->
+            (view as CheckedTextView).text = item.name
+        }
+
+    private fun getAudioDeviceAdapter(audioDevices: List<AudioDevice>) =
+        MenuItemAdapter(
+            this,
+            android.R.layout.select_dialog_singlechoice, audioDevices
+        ) { view, item, _ ->
+            (view as CheckedTextView).text = getAudioDeviceName(item)
+        }
+
+    private fun setVideoLayout(videoLayoutName: String?) {
+        val videoLayout = when (videoLayoutName) {
+            getString(R.string.people_view) ->
+                MeetingService.VideoLayout.People
+
+            getString(R.string.gallery_view) ->
+                MeetingService.VideoLayout.Gallery
+
+            getString(R.string.speaker_view) ->
+                MeetingService.VideoLayout.Speaker
+
+            else -> throw IllegalArgumentException("Invalid video layout")
+        }
+        bottomSheetFragment?.updateVideoLayout(videoLayoutName)
+        meetingService.setVideoLayout(videoLayout)
+    }
+
+    private fun selectAudioDevice(position: Int) {
+        audioDeviceAdapter?.updateSelectedPosition(position)
+        audioDeviceAdapter?.getItem(position)?.let {
+            bottomSheetFragment?.updateAudioDevice(getAudioDeviceName(it))
+            meetingService.audioDeviceService.selectAudioDevice(it)
+        }
+    }
+
+    private fun selectVideoDevice(position: Int) {
+        videoDeviceAdapter?.updateSelectedPosition(position)
+        videoDeviceAdapter?.getItem(position)?.let {
+            bottomSheetFragment?.updateVideoDevice(it.name)
+            closeCameraSettings()
+            videoDeviceService.selectVideoDevice(it)
+        }
+    }
+
+    private fun selectVideoLayout(position: Int) {
+        videoLayoutAdapter?.updateSelectedPosition(position)
+        setVideoLayout(videoLayoutAdapter?.getItem(position))
+    }
+
+    private fun hideKeyboard() {
+        val view = this.currentFocus
+        if (view != null) {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
     private fun showCameraSettingsDialog() {
         val seek = SeekBar(this).apply {
             max = 10
@@ -822,10 +898,46 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             progress = zoomScaleFactor
         }
         seek.setOnSeekBarChangeListener(zoomSliderChangeListener)
-        AlertDialog.Builder(this).apply {
+        cameraSettingsDialog = AlertDialog.Builder(this).apply {
             setTitle(getString(R.string.camera_setting_title))
             setView(seek)
-        }.create().show()
+        }.create()
+        cameraSettingsDialog?.show()
+    }
+
+    /**
+     * It calculates the new crop region by finding out the delta between active camera region's
+     * x and y coordinates and divide by zoom scale factor to get updated camera's region.
+     * @param cameraActiveRegion
+     * @param zoomFactor
+     * @return Rect coordinates of crop region to be zoomed.
+     */
+    private fun getCropRegionForZoom(
+        cameraActiveRegion: Rect,
+        zoomFactor: Int
+    ): Rect {
+        val xCenter = cameraActiveRegion.width() / 2
+        val yCenter = cameraActiveRegion.height() / 2
+        val xDelta = (0.5f * cameraActiveRegion.width() / zoomFactor).toInt()
+        val yDelta = (0.5f * cameraActiveRegion.height() / zoomFactor).toInt()
+        return Rect(
+            xCenter - xDelta, yCenter - yDelta, xCenter + xDelta,
+            yCenter + yDelta
+        )
+    }
+
+    private fun getVideoLayoutDisplayName(videoLayout: MeetingService.VideoLayout): String {
+        return when (videoLayout) {
+            MeetingService.VideoLayout.Speaker -> {
+                getString(R.string.speaker_view)
+            }
+            MeetingService.VideoLayout.Gallery -> {
+                getString(R.string.gallery_view)
+            }
+            MeetingService.VideoLayout.People -> {
+                getString(R.string.people_view)
+            }
+        }
     }
 
     private val zoomSliderChangeListener = object : SeekBar.OnSeekBarChangeListener {
@@ -859,26 +971,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         cameraManager.getCameraCharacteristics(cameraId)
     }
 
-    /**
-     * It calculates the new crop region by finding out the delta between active camera region's
-     * x and y coordinates and divide by zoom scale factor to get updated camera's region.
-     * @param cameraActiveRegion
-     * @param zoomFactor
-     * @return Rect coordinates of crop region to be zoomed.
-     */
-    private fun getCropRegionForZoom(
-        cameraActiveRegion: Rect,
-        zoomFactor: Int
-    ): Rect {
-        val xCenter = cameraActiveRegion.width() / 2
-        val yCenter = cameraActiveRegion.height() / 2
-        val xDelta = (0.5f * cameraActiveRegion.width() / zoomFactor).toInt()
-        val yDelta = (0.5f * cameraActiveRegion.height() / zoomFactor).toInt()
-        return Rect(
-            xCenter - xDelta, yCenter - yDelta, xCenter + xDelta,
-            yCenter + yDelta
-        )
+    private val userName: String by lazy {
+        when {
+            binding.joinInfo.etName.text.toString().isEmpty() -> "Guest"
+            else -> binding.joinInfo.etName.text.toString()
+        }
     }
+
+
 
     companion object {
         const val TAG = "MainActivity"
