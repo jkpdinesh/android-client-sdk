@@ -2,7 +2,7 @@
 # BlueJeans Android Software Development Kit
 
 The BlueJeans Android Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
-Note that the product is currently in **alpha** phase of its release cycle and is under active development.
+Note that the product is currently in **beta** phase of its release cycle and is under active development.
 
 BlueJeans SDK participant receives individual video streams from each of the video participant in the meeting. This provides an enhanced remote video quality experience with the resolution, fps of individual streams better as compared to a single composited stream in an earlier hybrid model.
 
@@ -25,12 +25,13 @@ BlueJeans SDK participant receives individual video streams from each of the vid
 - Multi stream support (Sequin Video Layouts)
 - Enable torch / flash unit on a device
 - Set capture requests such as zoom, exposure on the active video device
-
-### New Features:
 - Public and Private meeting Chat
 - Remote Video and Content mute
 
-### Current Version: 1.0.0-alpha.6
+### New Features:
+- Meeting Information (Title, Host name, URL) property
+
+### Current Version: 1.0.0-beta.1
 
 ### Pre-requisites:
 - **Android API level:** Min level 26
@@ -75,7 +76,7 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 
 In app's build.gradle
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-alpha.6"
+implementation "com.bluejeans:sdk-android:1.0.0-beta.1"
 ```
 
 #### Upgrade Instructions:
@@ -92,9 +93,7 @@ Sample Code:
 blueJeansSDK = new BlueJeansSDK(new BlueJeansSDKInitParams(this));
 ```
 
-1.0.0-alpha.6 brings in a better API hierarchy with grouping APIs to relevant services. Refer to CHANGELOG.md for details in changes.
-
-All the service objects are available all the time after SDK instantiation, however all are not active all the time.
+APIs are grouped into relevant services as in the architecture diagram. All the service objects are available all the time after SDK instantiation, however all are not active all the time.
 When inactive, APIs of the services do not react and the subscriptions will yield null. 
 
 **List of services :** 
