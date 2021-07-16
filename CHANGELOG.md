@@ -69,5 +69,9 @@ API changes:
 <img width="513" alt="APIChanges" src="https://user-images.githubusercontent.com/23289872/123609917-bc50df80-d81d-11eb-9442-1151c8760b3a.png">
 
 
-
-
+Version 1.0.0-beta.1 *(07-2021)*
+---------------------------------
+Features / Changes:
+- Meeting information(Title, Host, URL)
+- Audio quality enhancements
+- Misc bug fixes
