@@ -161,7 +161,7 @@ BlueJeans SDK provides for capability to *setRepeatingCaptureRequest* which inte
 
 ##### Setting torch mode:
 
-BlueJeans SDK provides for capability to  turn ON/OFF torch. *setTorchMode* API sets the flash unit's torch mode of the video device for the given ID. Note : Some of the devices need the camera device to be open for the Torch to be turned ON.
+BlueJeans SDK provides for capability to  turn ON/OFF torch. *setTorchMode* API sets the flash unit's torch mode of the video device for the given ID. Note : Some of the devices need the torch supported camera device to be open for the torch to be turned ON.
 
 ### MeetingService:
 This service takes care of all meeting related APIs. Apart from meeting related APIs, the service also provides provides for several inMeeting services - ParticipantsService, AudioDeviceService, ContentShareService, PublicChatService and PrivateChatService.
