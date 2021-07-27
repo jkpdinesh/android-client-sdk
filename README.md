@@ -35,6 +35,7 @@ BlueJeans Android Client SDK participant receives individual video streams from 
 
 ### Pre-requisites:
 - **Android API level:** Min level 26
+
 - **Android Device:**
    - OS level - Oreo 8.0 or later
    - CPU - armeabi-v7a, arm64-v8a
@@ -45,12 +46,24 @@ BlueJeans Android Client SDK participant receives individual video streams from 
    - Compile SDK Version: 28 and above
    - Source and Target compatibility to java version 1_8 in gradle
    - RxJava, RxKotlin
+   
 
 ### API Architecture
 <img width="870" alt="BJNAndroidClientSDKArch" src="https://user-images.githubusercontent.com/23289872/127135069-e7558cd6-e326-43ad-8341-4507b9303933.png">
 
 
 ### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
+
+### How it all works
+Two steps to experience BlueJeans meetings using the android client SDK. They are as below :
+
+#### Generate a meeting ID :
+As a pre requiste to using the BlueJeans Android Client SDK to join meetings, you need to have a BlueJeans meeting ID. If you do not have a meeting ID then you can create one using a meeting schedule option using a BlueJeans account as below
+   - Sign up for a BlueJeans Account either by opting in for a [trial](https://www.bluejeans.com/free-video-conferencing-trial) or a [paid mode](https://store.bluejeans.com/)
+   - Once account is created, you can schedule a meeting either by using the account or through the [direct API](https://bluejeans.github.io/api-rest-howto/schedule.html) calls. In order to enable API calls on your account, please reach out to [support team](https://support.bluejeans.com/s/contactsupport).
+
+#### Integrate BlueJeans Android Client SDK
+Integrate the SDK using the below guidelines and use SDK APIs to join a meeting using the generated meeting ID. 
 
 ### Integration Steps:
 #### Override Minimum SDK Version:
