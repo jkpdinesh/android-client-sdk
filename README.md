@@ -54,7 +54,7 @@ BlueJeans Android Client SDK participant receives individual video streams from 
 
 ### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
 
-### How it all works
+### How it all works ?
 Two steps to experience BlueJeans meetings using the android client SDK. They are as below :
 
 #### Generate a meeting ID :
