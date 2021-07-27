@@ -1,10 +1,10 @@
 [![BlueJeans Android Software Development Kit](https://raw.githubusercontent.com/bluejeans/sdk-webrtc-meetings/master/media/BlueJeans_Mark.png "BlueJeans Android Software Development Kit")](https://www.bluejeans.com "BlueJeans Android Software Development Kit")
-# BlueJeans Android Software Development Kit
+# BlueJeans Android Client Software Development Kit
 
-The BlueJeans Android Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
+The BlueJeans Android Client Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
 Note that the product is currently in **beta** phase of its release cycle and is under active development.
 
-BlueJeans SDK participant receives individual video streams from each of the video participant in the meeting. This provides an enhanced remote video quality experience with the resolution, fps of individual streams better as compared to a single composited stream in an earlier hybrid model.
+BlueJeans Android Client SDK participant receives individual video streams from each of the video participant in the meeting. This provides an enhanced remote video quality experience with the resolution, fps of individual streams better as compared to a single composited stream in an earlier hybrid model.
 
 ### Features:
 - Audio and Video Permission handling
@@ -47,13 +47,14 @@ BlueJeans SDK participant receives individual video streams from each of the vid
    - RxJava, RxKotlin
 
 ### API Architecture
-![BlueJeansSDKArch](https://user-images.githubusercontent.com/23289872/123635962-eca67700-d839-11eb-8067-86da7b3f8a32.jpg)
+![BlueJeansSDKArch]<img width="870" alt="BJNAndroidClientSDKArch" src="https://user-images.githubusercontent.com/23289872/127135069-e7558cd6-e326-43ad-8341-4507b9303933.png">
+
 
 ### Documentation: [Dokka docs](https://bluejeans.github.io/android-sdk)
 
 ### Integration Steps:
 #### Override Minimum SDK Version:
-This version of BlueJeans Android SDK is compatible with Android version "26" or higher. Therefore, your Android app must have a minimum SDK version 26 or higher.
+This version of BlueJeans Android Client SDK is compatible with Android version "26" or higher. Therefore, your Android app must have a minimum SDK version 26 or higher.
 
 If your app runs with min SDK version below API level 26, you must override min SDK version as in the below sample. However please note that, SDK instantiation will fail if the app runs on API level below 26, please add build check to avoid SDK instantiation on device with API level < 26.
 
@@ -63,7 +64,7 @@ If your app runs with min SDK version below API level 26, you must override min 
 tools:overrideLibrary="com.bluejeans.bluejeanssdk"/>
 ```
 
-#### Install BlueJeans Android SDK:
+#### Install BlueJeans Android Client SDK:
 
 We distribute our SDK from the Maven Repository.
 
