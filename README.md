@@ -429,6 +429,9 @@ Sample app depicts usage of both the RxSingle and ObeservableValue
 We have bundled two sample apps in this repo. One for Java and another for kotlin.
 It show cases the integration of BlueJeans SDK for permission flow and join flow. They have got a basic UI functionality and orientation support.
 
+### Tracking & Analytics 
+BlueJeans collects data from app clients who integrates with SDK to join BlueJeans meetings like Device information (ID, OS etc.), Location and usage data.
+
 ### Contributing:
 The BlueJeans Android Client SDK is closed source and proprietary. As a result, we cannot accept pull requests. However, we enthusiastically welcome feedback on how to make our SDK better. If you think you have found a bug, or have an improvement or feature request, please file a GitHub issue and we will get back to you. Thanks in advance for your help!
 
