@@ -147,14 +147,14 @@ It is recommended to start a foreground service before getting into the meeting.
 
 Starting a foreground service ensures we have all the system resources available to our app even when in background, thereby not compromising on audio quality, content capture quality during features like content share and also prevents app from being killed due to lack of resources in background.
 
-Refer OnGoingMeetingService and MeetingNotificationUtility for sample implementation.
+Refer *OnGoingMeetingService* and *MeetingNotificationUtility* for sample implementation.
 
 **Note:**
 - foreground service is not needed if your app runs on a platform where it will never be put to background.
 
 #### Steps to join meeting
 - Provide Mic(RecordAudio) and Camera Permissions either by using BJN SDK permissionService or by Android SDK APIs
-- Get and add SelfVideoFragment and enableSelfVideoPreview to start the self video
+- Get and add *SelfVideoFragment* and *enableSelfVideoPreview* to start the self video
 - Get and use meeting service and invoke join APIs to join a meeting
 - Observe for Join API result by subscribing to the Rx Single returned by the join API
 
