@@ -42,6 +42,7 @@ import com.bluejeans.android.sdksample.utils.AudioDeviceHelper.Companion.getAudi
 import com.bluejeans.android.sdksample.viewpager.ScreenSlidePagerAdapter
 import com.bluejeans.bluejeanssdk.devices.AudioDevice
 import com.bluejeans.bluejeanssdk.devices.VideoDevice
+import com.bluejeans.bluejeanssdk.logging.LoggingService
 import com.bluejeans.bluejeanssdk.meeting.ContentShareAvailability
 import com.bluejeans.bluejeanssdk.meeting.ContentShareEvent
 import com.bluejeans.bluejeanssdk.meeting.ContentShareState
@@ -194,12 +195,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                        {
-                            Log.i(TAG, "Log uploaded successfully $it")
-                            Toast.makeText(
-                                this, getString(R.string.upload_logs_success),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        { result ->
+                            Log.i(TAG, "Log uploaded successfully $result")
+                            if (result !== LoggingService.LogUploadResult.Success) {
+                                showToastMessage(getString(R.string.upload_logs_failure))
+                            } else {
+                                showToastMessage(getString(R.string.upload_logs_success))
+                            }
                             uploadLogsDialog?.dismiss()
                         },
                         {
@@ -215,8 +217,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         })
             )
         } else {
-            Toast.makeText(this, "Please enter your comments.", Toast.LENGTH_SHORT).show()
+            showToastMessage("Please enter your comments.")
         }
+    }
+
+    private fun showToastMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private val startActivityLauncher = registerForActivityResult(
