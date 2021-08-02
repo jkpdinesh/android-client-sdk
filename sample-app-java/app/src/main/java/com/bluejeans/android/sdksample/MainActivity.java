@@ -245,26 +245,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mLoggingService.uploadLog(comments, userName)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe( result ->
+                            .subscribe(result ->
                                     {
                                         Log.i(TAG, "Log uploaded successfully " + result);
-                                            Toast.makeText(
-                                                    this, getString(R.string.upload_logs_success),
-                                                    Toast.LENGTH_SHORT
-                                            ).show();
-                                            mUploadLogsDialog.dismiss();
-                        },
+                                        if (result != LoggingService.LogUploadResult.Success.INSTANCE) {
+                                            showToastMessage(getString(R.string.upload_logs_failure));
+                                        } else {
+                                            showToastMessage(getString(R.string.upload_logs_success));
+                                        }
+                                        mUploadLogsDialog.dismiss();
+                                    },
                                     error -> {
-                Log.e(TAG, "Error while uploading logs");
-                mProgressBar.setVisibility(View.GONE);
-                Toast.makeText(
-                        this, getString(R.string.upload_logs_failure),
-                        Toast.LENGTH_SHORT
-                ).show();
-            }));
+                                        Log.e(TAG, "Error while uploading logs");
+                                        mProgressBar.setVisibility(View.GONE);
+                                        showToastMessage(getString(R.string.upload_logs_failure));
+                                    }));
         } else {
-            Toast.makeText(this, "Please enter your comments.", Toast.LENGTH_SHORT).show();
+            showToastMessage("Please enter your comments.");
         }
+    }
+
+    private void showToastMessage(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
