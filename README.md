@@ -88,7 +88,7 @@ repositories { maven { url "https://swdl.bluejeans.com/bjnvideosdk/android" } }
 
 In app's build.gradle
 ```xml
-implementation "com.bluejeans:sdk-android:1.0.0-beta.1"
+implementation "com.bluejeans:android-client-sdk:1.0.0"
 ```
 
 ### Upgrade Instructions:
