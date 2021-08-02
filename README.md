@@ -2,11 +2,10 @@
 # BlueJeans Android Client Software Development Kit
 
 The BlueJeans Android Client Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
-Note that the product is currently in **beta** phase of its release cycle and is under active development.
 
-BlueJeans Android Client SDK participant receives individual video streams from each of the video participant in the meeting. This provides an enhanced remote video quality experience with the resolution, fps of individual streams better as compared to a single composited stream in an earlier hybrid model.
+With BlueJeans Android Client SDK, participants can join video conference meetings where they receive individual video streams from each of the video participant in the meeting. This provides an enhanced remote video quality experience with the resolution, fps of individual streams better as compared to a single composited stream in an earlier hybrid model.
 
-### Features:
+## Features:
 - Audio and Video Permission handling
 - Join, End Meeting
 - Self Video
@@ -27,13 +26,11 @@ BlueJeans Android Client SDK participant receives individual video streams from 
 - Set capture requests such as zoom, exposure on the active video device
 - Public and Private meeting Chat
 - Remote Video and Content mute
-
-### New Features:
 - Meeting Information (Title, Host name, URL) property
 
-### Current Version: 1.0.0-beta.1
+## Current Version: 1.0.0
 
-### Pre-requisites:
+## Pre-requisites:
 - **Android API level:** Min level 26
 
 - **Android Device:**
@@ -48,25 +45,26 @@ BlueJeans Android Client SDK participant receives individual video streams from 
    - RxJava, RxKotlin
    
 
-### API Architecture
+## API Architecture
 <img width="870" alt="BJNAndroidClientSDKArch" src="https://user-images.githubusercontent.com/23289872/127135069-e7558cd6-e326-43ad-8341-4507b9303933.png">
 
 
-### Documentation: [Dokka docs](https://bluejeans.github.io/android-client-sdk)
+## SDK Documentation:
+Detailed documentation of SDK functions is available [here](https://bluejeans.github.io/android-client-sdk)
 
-### How it all works ?
-Two steps to experience BlueJeans meetings using the android client SDK. They are as below :
+## How it all works?
+You can experience BlueJeans meetings using the android client SDK by following below 2 steps -
 
-#### Generate a meeting ID :
+### Generate a meeting ID :
 As a pre requiste to using the BlueJeans Android Client SDK to join meetings, you need to have a BlueJeans meeting ID. If you do not have a meeting ID then you can create one using a meeting schedule option using a BlueJeans account as below
    - Sign up for a BlueJeans Account either by opting in for a [trial](https://www.bluejeans.com/free-video-conferencing-trial) or a [paid mode](https://store.bluejeans.com/)
    - Once account is created, you can schedule a meeting either by using the account or through the [direct API](https://bluejeans.github.io/api-rest-howto/schedule.html) calls. In order to enable API calls on your account, please reach out to [support team](https://support.bluejeans.com/s/contactsupport).
 
-#### Integrate BlueJeans Android Client SDK
+### Integrate BlueJeans Android Client SDK
 Integrate the SDK using the below guidelines and use SDK APIs to join a meeting using the generated meeting ID. 
 
-### Integration Steps:
-#### Override Minimum SDK Version:
+## Integration Steps:
+### Override Minimum SDK Version:
 This version of BlueJeans Android Client SDK is compatible with Android version "26" or higher. Therefore, your Android app must have a minimum SDK version 26 or higher.
 
 If your app runs with min SDK version below API level 26, you must override min SDK version as in the below sample. However please note that, SDK instantiation will fail if the app runs on API level below 26, please add build check to avoid SDK instantiation on device with API level < 26.
@@ -77,7 +75,7 @@ If your app runs with min SDK version below API level 26, you must override min 
 tools:overrideLibrary="com.bluejeans.bluejeanssdk"/>
 ```
 
-#### Install BlueJeans Android Client SDK:
+### Install BlueJeans Android Client SDK:
 
 We distribute our SDK from the Maven Repository.
 
@@ -93,11 +91,11 @@ In app's build.gradle
 implementation "com.bluejeans:sdk-android:1.0.0-beta.1"
 ```
 
-#### Upgrade Instructions:
+### Upgrade Instructions:
 Whenever a newer version of SDK is available, you can consume it by increasing the version in the implementation code block to the new SDK version.
 
 
-### Initialize BlueJeans SDK:
+## Initialize BlueJeans SDK:
 Create the object of BlueJeans SDK in application onCreate with help of application context and use it to access all the APIs
 
 Minimum permission needed to join a meeting is permission for RECORD_AUDIO. Make sure app requests this permission before calling Join API.
@@ -124,7 +122,7 @@ PermissionService : Provides for permission handling related APIs (refer to docu
 ```java
 blueJeansSDK.getPermissionService
 ```
-Logging Service : Provides for SDK logging related APIs (refer to documentation for API set and details)
+LoggingService : Provides for SDK logging related APIs (refer to documentation for API set and details)
 
 ```java
 blueJeansSDK.getLoggingService
@@ -142,7 +140,7 @@ MeetingService : Provides for meeting related APIs and all inMeeting Services
 blueJeansSDK.getMeetingService
 ```
 
-#### Join a BlueJeans meeting:
+## Join a BlueJeans meeting:
 It is recommended to start a foreground service before getting into the meeting. If you are not familiar with [foreground services](https://developer.android.com/guide/components/foreground-services) and [notfications](https://developer.android.com/reference/android/app/Notification), we suggest you to learn about these before proceeding with this section.
 
 Starting a foreground service ensures we have all the system resources available to our app even when in background, thereby not compromising on audio quality, content capture quality during features like content share and also prevents app from being killed due to lack of resources in background.
@@ -152,14 +150,14 @@ Refer *OnGoingMeetingService* and *MeetingNotificationUtility* for sample implem
 **Note:**
 - foreground service is not needed if your app runs on a platform where it will never be put to background.
 
-#### Steps to join meeting
+### Steps to join meeting
 - Provide Mic(RecordAudio) and Camera Permissions either by using BJN SDK permissionService or by Android SDK APIs
 - Get and add *SelfVideoFragment* and *enableSelfVideoPreview* to start the self video
 - Get and use meeting service and invoke join APIs to join a meeting
 - Observe for Join API result by subscribing to the Rx Single returned by the join API
 
 
-### VideoDeviceService (Video device enumeration, Selection):
+#### VideoDeviceService (Video device enumeration, Selection):
 
 *enableSelfVideoPreview* provides for enabling/disabling the camera capturer. Functional irrespective of meeting state.
 
@@ -177,10 +175,10 @@ BlueJeans SDK provides for capability to *setRepeatingCaptureRequest* which inte
 
 BlueJeans SDK provides for capability to  turn ON/OFF torch. *setTorchMode* API sets the flash unit's torch mode of the video device for the given ID. Note : Some of the devices need the torch supported camera device to be open for the torch to be turned ON.
 
-### MeetingService:
+## Meeting Service:
 This service takes care of all meeting related APIs. Apart from meeting related APIs, the service also provides provides for several inMeeting services - ParticipantsService, AudioDeviceService, ContentShareService, PublicChatService and PrivateChatService.
 
-#### Video Layouts:
+### Video Layouts:
 
 Represents how remote participants videos are composed
 - **Speaker**: Only the most recent speaker is shown, taking up the whole video stream.
@@ -192,21 +190,21 @@ Represents how remote participants videos are composed
 Note that by default the current layout will be the People layout or it will be the one chosen by the meeting scheduler in his accounts meeting settings.
 
 
-##### Different layouts, number of tiles:
+#### Different layouts, number of tiles:
 - `Speaker layout` to fit one single active speaker participant
 - `People layout` to fit max 6 participants, 1 (main active speaker participant) + 5 (film strip participants)
 - `Gallery layout` can fit maximum number of participant tiles as 9 or 25 depending on SDK input configuration. By default it is 9 participants, ordered in 3x3 style. This is configurable to support max of 25 participants, ordered in 5x5 style
 
-##### Configuring 5x5 in gallery layout:
+#### Configuring 5x5 in gallery layout:
 BlueJeansSDKInitParams provides a new input parameter called videoConfiguration which can be set with value GalleryLayoutConfiguration.FiveByFive. It is recommended to set this only on larger form factor (>= 7") devices for a better visual experience. Note that using 5x5 will consume higher memory, CPU and battery as compared to other layouts
 
-#### Remote Video :
+### Remote Video:
 
 The BlueJeans SDK's RemoteVideoFragment provides for both the audio and video participant tiles. The organization and the ordering of these tiles depend on factors namely recent dominant speaker and meeting layout, in addition to an algorithm that ensures minimal movement of tiles when recent speaker changes. Video participants are given the priority and are put first in the list and then the audio participants follow.
 
 Note: MultiStream mode is not supported on devices with number of CPU cores less than six. In such cases, RemoteVideoFragment would receive single composited stream (participants videos are stitched at the server, organized based on the layout chosen and a single stream is served to the client).
 
-#### Video Resolutions and BW consumption:
+### Video Resolutions and BW consumption:
 
 - Video receive resolution and BW max:
 
@@ -225,7 +223,7 @@ Note: MultiStream mode is not supported on devices with number of CPU cores less
 
 Note: Endpoints which send video in aspect ratio of 4:3 instead of 16:9, will result in video receive resolution of 640x480 in place of 640x360, 240x180 in place of 320x180 and 120x90 in place of 160x90. Mobile endpoints / BlueJeans android SDK endpoints send video at 640x480 i.e at aspect ratio of 4:3.
 
-##### Mute:
+### Mute:
 
 The BluejeansSDK provides APIs to mute/unmute self video.
 
@@ -238,7 +236,7 @@ Note that
 - when in a meeting (meeting state is MeetingState.Connected) and if `setVideoMuted` is called with true, `enableSelfVideoPreview` is called with true,
 then the self video preview gets activated but the stream does not flow to the other endpoint.
 
-###### Mute/Unmute Remote Video:
+#### Mute/Unmute Remote Video:
 The BluejeansSDK MeetingService provides API to mute, unmute remote participants video. This is helpful in the scenarios where the user does not intend to view remote video.
 Some example use cases can be
 - App has a viewpager with first page showing remote video and second page showing content. When user is on content page, this API can be used to mute remote video.
@@ -249,7 +247,7 @@ Some example use cases can be
 ##### API:
 `meetingService.setRemoteVideoMuted(muted: Boolean)`
 
-###### Mute/Unmute Content:
+#### Mute/Unmute Content:
 The BluejeansSDK MeetingService provides API to mute, unmute content. This is helpful in the scenarios where the user does not intend to view content.
 Some example use cases can be
 - App has a viewpager with first page showing remote video and second page showing content. When user is on video page, this API can be used to mute content.
@@ -260,7 +258,7 @@ Some example use cases can be
 ##### API:
 `meetingService.setContentMuted(muted: Boolean)`
 
-###### Background handling recommendations:
+#### Background handling recommendations:
 When the app is put to background and user is out of meeting: User's self video needs to be stopped to save CPU load, save battery
 When the app is put to background and user is in a meeting:
 - User's self video needs to be stopped for privacy reasons
@@ -274,7 +272,7 @@ Use `enableSelfVideoPreview` for managing the capturer when not in meeting
 Use `setRemoteVideoMuted` for managing remote participants video when in a meeting
 Use `setContentMuted` for managing content when in a meeting
 
-### AudioDeviceService (Audio device enumeration, Selection):
+## Audio Device Service (Audio device enumeration, Selection):
 
 ```java
 blueJeansSDK.getMeetingService().getAudioDeviceService()
@@ -295,7 +293,7 @@ On dynamic change in audio devices, SDK's default order of auto selection is as 
 
 Use *selectAudioDevice* and choose the audio device of your choice from the available *audioDevices* list.
 
-### ParticipantsService:
+## Participants Service:
 
 ```java
 blueJeansSDK.getMeetingService().getParticipantsService()
@@ -314,14 +312,14 @@ Provides facility to share content within the meeting, there by enhances the col
 blueJeansSDK.getMeetingService().getContentShareService()
 ```
 
-##### Sharing the Screen :
+#### Sharing the Screen :
 This is a full device screen share, where the SDK will have access to all of the information that is visible on the screen or played from your device while recording or casting. This includes information such as passwords, payment details, photos, messages, and audio that you play. This information about data captured is prompted to the user as a part of starting screen share permission consent dialog and the data populated within the dialog comes from android framework.
 
-###### Feature pre requisites :
+##### Feature pre requisites :
 - Permission to capture screen data using android's Media Projection Manager
 - Foreground service
 
-###### Sample code to ask permission :
+##### Sample code to ask permission :
 
       MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
       startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREEN_SHARE_REQUEST_CODE);
@@ -332,7 +330,7 @@ The above request will result in a permission dialog like
 
 Note that, this is a system prompted dialog where the name in the dialog will be the app name and the content is a predefined by the Android System.
 
-###### Start foreground service, Screen Share :
+##### Start foreground service, Screen Share :
 Once you get the result of the permission, start a service and then invoke _startContentShare_ API :
 
 **Note:** If you already have a foreground service running for the meeting, then an explicit service for screen sharing is not needed.
@@ -344,7 +342,7 @@ in the service element of the app's manifest file as below
          android:stopWithTask="true"
          android:foregroundServiceType="mediaProjection"/>
 
-###### Invoke content share start API :
+##### Invoke content share start API :
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -359,65 +357,65 @@ in the service element of the app's manifest file as below
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-###### Start Share API :
+### Start Share API :
 `startContentShare(contentShareType: ContentShareType)`
 
-###### Stop Share API :
+### Stop Share API :
 `stopContentShare()`
 
-###### Observables with Screen Share feature :
+#### Observables with Screen Share feature :
 - contentShareState - provides for screen share current state
 - contentShareEvent - provides for screen share events
 - contentShareAvailability - provides for information about content share feature being available or not. Content share may not be available in cases such as an access disabled by moderator, access disabled by admin, due to lack of meeting privilege and enablement of moderator only share.
 
-###### User experience recommendation :
+#### User experience recommendation :
 Whenever Screen Share starts,
 - Put the app to background there by easing the user to chose screen/app of his choice
 - Have a overlay floater button out of app, which can be used to stopping the screen share
 - Stopping screen share using floater button can bring the app back to foreground
 - Put an overlay border around the screen to indicate that the screen share in progress
 
-### Meeting Chat Feature:
+## Meeting Chat Feature:
 The Bluejeans SDK's MeetingService provides facility to chat within the meeting with participants present in the meeting. The chat will remain during the
 duration of the meeting and will be cleared once the meeting is over.
 
 There are two types of chat services available
 
-### PublicChatService :
+## Public Chat Service :
 The service provides APIs to message all participants present in meeting at once i.e. All the participants present in the meeting, will receive the message sent through the service.
 
 **Note:** Whenever a new user joins or reconnection happens only last 10 public messages are restored.
 
-##### API :
+#### API :
 `meetingService.publicChatService.sendMessage(message: String): Boolean` </br>
 
-### PrivateChatService :
+## Private Chat Service :
 The service provides APIs to message individual participants present in the meeting i.e. Only the participant given as input to API will get the message. All participants present in meeting may or maynot
 be eligible for private chat. The service provides a list of eligible participants and only those participants will be available for private chat.
 
 **Note:** Whenever a participant disconnects and connects back in same meeting, it is treated as a new user and previous chat messages if any will not be retained.
 
-##### API :
+#### API :
 `meetingService.privateChatService.sendMessage(message: String, participant: Participant): Boolean`
 
 There Rx Subscriptions are provided by each of chat services to listen to message and unread message count. Please refer to API documentation for more details.
 
-### LoggingService :
+## Logging Service :
 Provides for uploading logs to BJN sdk log server. The API takes user comments and the user name.
 Name of the user serves as an unique identifier for us to identify the logs uploaded.
 
-##### API :
+#### API :
 `uploadLog(comments: String, username: String)`
 
-##### Single Result :
+#### Single Result :
 AlreadyUploading, Success, Failed
 
-### Subscriptions (ObservableValue and Rx Single's):
+## Subscriptions (ObservableValue and Rx Single's):
 
-##### RxSingle: 
+#### RxSingle: 
 This is a standard [Rx Single](http://reactivex.io/RxJava/javadoc/io/reactivex/Single.html)
 
-##### ObservableValue:
+#### ObservableValue:
 
 Most of our subscriptions are stateful members called ObservableValues. 
 These are our BJN custom reactive stream elements carrying a value that can be accessed (READ only) at any point of time and also allows a subscription. Through ObservableValue you can also access [RxObservable](http://reactivex.io/RxJava/javadoc/io/reactivex/Observable.html) and subscribe.
@@ -425,15 +423,15 @@ These are our BJN custom reactive stream elements carrying a value that can be a
 Sample app depicts usage of both the RxSingle and ObeservableValue
 
 
-### SDK Sample Application:
+## SDK Sample Application:
 We have bundled two sample apps in this repo. One for Java and another for kotlin.
 It show cases the integration of BlueJeans SDK for permission flow and join flow. They have got a basic UI functionality and orientation support.
 
-### Tracking & Analytics 
+## Tracking & Analytics:
 BlueJeans collects data from app clients who integrates with SDK to join BlueJeans meetings like Device information (ID, OS etc.), Location and usage data.
 
-### Contributing:
+## Contributing:
 The BlueJeans Android Client SDK is closed source and proprietary. As a result, we cannot accept pull requests. However, we enthusiastically welcome feedback on how to make our SDK better. If you think you have found a bug, or have an improvement or feature request, please file a GitHub issue and we will get back to you. Thanks in advance for your help!
 
-### License:
+## License:
 Copyright © 2021 BlueJeans Network. All usage of the SDK is subject to the Developer Agreement that can be found [here](LICENSE). You are expected to email api-sdk@bluejeans.com with a signed version of this agreement before any commercial or public facing usage of this SDK.
