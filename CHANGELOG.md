@@ -75,3 +75,10 @@ Features / Changes:
 - Meeting information(Title, Host, URL)
 - Audio quality enhancements
 - Misc bug fixes
+
+Version 1.0.0 *(08-2021)*
+---------------------------------
+Features / Changes:
+- Security fixes
+- Sample application improvements
+- Misc bug fixes
