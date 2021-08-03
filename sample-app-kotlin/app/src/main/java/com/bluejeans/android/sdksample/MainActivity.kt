@@ -964,7 +964,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
         val context = applicationContext
@@ -983,8 +982,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             else -> binding.joinInfo.etName.text.toString()
         }
     }
-
-
 
     companion object {
         const val TAG = "MainActivity"

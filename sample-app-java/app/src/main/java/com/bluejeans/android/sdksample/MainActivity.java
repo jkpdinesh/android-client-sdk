@@ -976,11 +976,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * It calculates the new crop region by finding out the delta between active camera region's
-     * x and y coordinates and divide by zoom scale factor to get updated camera's region.
+     * x and y coordinates and divide by zoom scale factor to get updated camera's region
      *
-     * @param cameraActiveRegion active area of the image sensor.
+     * @param cameraActiveRegion active area of the image sensor
      * @param zoomFactor scale factor
-     * @return Rect coordinates of crop region to be zoomed.
+     * @return Rect coordinates of crop region to be zoomed
      */
     private Rect getCropRegionForZoom(Rect cameraActiveRegion, int zoomFactor) {
         int xCenter = cameraActiveRegion.width() / 2;
