@@ -1,4 +1,5 @@
-[![BlueJeans Android Software Development Kit](https://raw.githubusercontent.com/bluejeans/sdk-webrtc-meetings/master/media/BlueJeans_Mark.png "BlueJeans Android Software Development Kit")](https://www.bluejeans.com "BlueJeans Android Software Development Kit")
+[![BlueJeans Android Software Development Kit](https://user-images.githubusercontent.com/23289872/127987669-3842046b-2f08-46e4-9949-6bf0cdb45d95.png "BlueJeans Android Software Development Kit")](https://www.bluejeans.com "BlueJeans Android Software Development Kit")
+
 # BlueJeans Android Client Software Development Kit
 
 The BlueJeans Android Client Software Development Kit (SDK) gives a quick and easy way to bring immersive video-calling experience into your android applications.
